@@ -21,32 +21,26 @@ public class Controller {
 
     @RequestMapping("/")
     public ModelAndView index () {
-        ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("index.html");
-        return modelAndView;
-    }
-
-    @GetMapping("/getUserInfo/")
-    public String getAllUsersInfo() {
-        return userService.getAllUsersInfo();
-    }
-
-    @GetMapping("/getUserInfo/{login}")
-    public String getUserInfo(@PathVariable String login) {
-        return userService.getUserInfo(login);
-    }
-
-    @GetMapping("/test")
-    public String getTestInfo(Model model) {
-        model.addAttribute("users", userService.getTestInfo());
-        return "index.html";
-    }
-
-    @GetMapping("/temp")
-    public ModelAndView getTempInfo() {
         ModelAndView modelAndView = new ModelAndView("index");
-        modelAndView.addObject("users", userService.getTempInfo());
+        modelAndView.addObject("users", userService.getAllUsers());
         return modelAndView;
     }
+
+//
+//    @GetMapping("/getUserInfo/")
+//    public String getAllUsersInfo() {
+//        return userService.getAllUsersInfo();
+//    }
+//
+//    @GetMapping("/getUserInfo/{login}")
+//    public String getUserInfo(@PathVariable String login) {
+//        return userService.getUserInfo(login);
+//    }
+//
+//    @GetMapping("/test")
+//    public String getTestInfo(Model model) {
+//        model.addAttribute("users", userService.getTestInfo());
+//        return "index.html";
+//    }
 
 }

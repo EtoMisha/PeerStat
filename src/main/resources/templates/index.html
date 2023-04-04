@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
-    <link href="theme.css" rel="stylesheet">
+    <link rel="stylesheet" href="data-table-lib/css/datatable.css" />
     <title>21 world - peer statistic</title>
 </head>
 <body>
@@ -26,65 +26,59 @@
     <div class="content_wrapper">
 <!--        <h2>Подзаголовок</h2>-->
         <div class="content">
-            <main id="main">
-                <section id="table-container">
-                    <div data-st-loading-indicator="">
-                        Processing ...
-                    </div>
 <!--            <p>Основное содержимое</p>-->
-                    <div th:if="${ not#lists.isEmpty(users)}">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th data-st-sort="login">Login</th>
-                                    <th data-st-sort="campus">Campus</th>
-                                    <th data-st-sort="coalition">Coalition</th>
-                                    <th data-st-sort="wave">Wave</th>
-                                    <th data-st-sort="bootcamp">Bootcamp</th>
-                                    <th>Level</th>
-                                    <th>Xp</th>
-                                    <th>Peer points</th>
-                                    <th>CR points</th>
-                                    <th>Coins</th>
-                                    <th>Month XP</th>
-                                    <th>3 Months XP</th>
-                                    <th>Current project</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="user : ${users}">
-                                    <td th:text="${user.login}">Login</td>
-                                    <td th:text="${user.campus}"></td>
-                                    <td th:text="${user.coalition}"></td>
-                                    <td th:text="${user.wave}"></td>
-                                    <td th:text="${user.bootcamp}"></td>
-                                    <td th:text="${user.level}"></td>
-                                    <td th:text="${user.xp}"></td>
-                                    <td th:text="${user.peerPoints}"></td>
-                                    <td th:text="${user.codeReviewPoints}"></td>
-                                    <td th:text="${user.coins}"></td>
-                                    <td th:text="${user.diff}"></td>
-                                    <td th:text="${user.diff3}"></td>
-                                    <td th:text="${user.currentProject}"></td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                            <tr>
-                                <td colspan="3" data-st-summary></td>
-                                <td colspan="2">
-                                    <div data-st-pagination></div>
-                                </td>
-                            </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </section>
-            </main>
+            <div th:if="${ not#lists.isEmpty(users)}">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                            <th>Login</th>
+                            <th>Campus</th>
+                            <th>Coalition</th>
+                            <th>Wave</th>
+                            <th>Bootcamp</th>
+                            <th>Level</th>
+                            <th>XP</th>
+                            <th>PRP</th>
+                            <th>CRP</th>
+                            <th>Coins</th>
+                            <th>Month XP</th>
+                            <th>3 Months XP</th>
+                            <th>Current project</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.login}"></td>
+                            <td th:text="${user.campus}"></td>
+                            <td th:text="${user.coalition}"></td>
+                            <td th:text="${user.wave}"></td>
+                            <td th:text="${user.bootcamp}"></td>
+                            <td th:text="${user.level}"></td>
+                            <td th:text="${user.xp}"></td>
+                            <td th:text="${user.peerPoints}"></td>
+                            <td th:text="${user.codeReviewPoints}"></td>
+                            <td th:text="${user.coins}"></td>
+                            <td th:text="${user.diff}"></td>
+                            <td th:text="${user.diff3}"></td>
+                            <td th:text="${user.currentProject}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="pagination"></div>
+            </div>
+            <script src="data-table-lib/js/datatable.js"></script>
+            <script src="data-table-lib/js/datatable.jquery.js"></script>
+            <script>
+                const myTable = new DataTable(document.querySelector('.table'), {
+                    pageSize: 20,
+                    sort: [true, true, true, true, true, true, true, true, true, true, true, true, true],
+                    filters: [true, 'select', 'select', 'select', 'select', 'select', false, false, false, false, false, false, true],
+                    pagingDivSelector: "#pagination",
+                });
+            </script>
         </div>
     </div>
 </div>
-<script src="dataBundle.js"></script>
-<script src="bundle.js"></script>
 
 </body>
 </html>

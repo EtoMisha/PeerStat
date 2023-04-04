@@ -13,6 +13,8 @@ public interface UserRepo extends CrudRepository<User, Long> {
 
     List<User> findAll();
 
+    List<User> findByOrderByXpDesc();
+
     List<User> findAllByLevel(int level);
 
 }

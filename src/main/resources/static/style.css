@@ -1,6 +1,6 @@
 html {
     box-sizing: border-box;
-    /*font-size: 150%;*/
+    font-size: 100%;
     line-height: 1.3;
     height: 100%;
     font-weight: lighter;
@@ -59,17 +59,11 @@ h5,
 h6 {
     display: block;
     font-weight: lighter;
-    /*text-align: center;*/
 }
 
 h1 a {
     color: inherit;
 }
-
-/*ol,*/
-/*ul {*/
-/*    list-style: none;*/
-/*}*/
 
 input:hover,
 input:active,
@@ -88,11 +82,6 @@ button:focus {
 }
 
 .header {
-    /*background-image: url("images/logo.png");*/
-    /*background-position: center;*/
-    /*background-repeat: no-repeat;*/
-    /*background-size: 5em;*/
-    /*height: 200px;*/
     position: relative;
 }
 
@@ -110,12 +99,10 @@ button:focus {
 .header-text {
     display: inline-block;
     position: absolute;
-    /*margin-left: 2em;*/
     top: 50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
 }
-
 
 .menu {
     /*text-align: center;*/
@@ -139,11 +126,8 @@ button:focus {
 
 .wrapper {
     width: 90%;
-    /*max-width: 70em;*/
     display: flex;
     flex-direction: column;
-    /*background-image: url("images/logo.png");*/
-    /*background-position: center;*/
     background-repeat: no-repeat;
     background-size: 5em;
     margin-left: 1em;
@@ -156,3 +140,76 @@ button:focus {
 .content {
     margin-top: 1em;
 }
+
+table, th, td {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+td {
+    padding: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-of-type(1),
+td:nth-of-type(1) {
+    width:10%;
+}
+th:nth-of-type(2),
+td:nth-of-type(2) {
+    width:7%;
+}
+th:nth-of-type(3),
+td:nth-of-type(3) {
+    width:7%;
+}
+th:nth-of-type(4),
+td:nth-of-type(4) {
+    width:10%;
+}
+th:nth-of-type(5),
+td:nth-of-type(5) {
+    width:10%;
+}
+th:nth-of-type(6),
+td:nth-of-type(6) {
+    width:5%;
+}
+th:nth-of-type(7),
+td:nth-of-type(7) {
+    width:5%;
+}
+th:nth-of-type(8),
+td:nth-of-type(8) {
+    width:5%;
+}
+th:nth-of-type(9),
+td:nth-of-type(9) {
+    width:5%;
+}
+th:nth-of-type(10),
+td:nth-of-type(10) {
+    width:5%;
+}
+th:nth-of-type(11),
+td:nth-of-type(11) {
+    width:9%;
+}
+th:nth-of-type(12),
+td:nth-of-type(12) {
+    width:9%;
+}
+
+
+

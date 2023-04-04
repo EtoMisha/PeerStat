@@ -35,6 +35,7 @@ public class UserView {
     private static final String PROJECT_NAME = "name";
     private static final String AWARD_DATE = "awardDate";
     private static final String XP_VALUE = "expValue";
+    private static final String NO_BOOTCAMP = "";
 
     public UserView() {
     }
@@ -44,7 +45,7 @@ public class UserView {
         this.campus = campusNames.get(user.getSchoolId());
         this.coalition = user.getCoalitionName();
         this.wave = user.getWaveName();
-        this.bootcamp = user.getBootcampName();
+        this.bootcamp = user.getBootcampName().equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
         this.level = user.getLevel();
         this.xp = user.getXp();
         this.peerPoints = user.getPeerPoints();
@@ -54,6 +55,11 @@ public class UserView {
         this.diff3 = getXpDiff(user, 3);
         this.currentProject = getCurrentProject(user);
     }
+//
+//    private String getProfileLink(User user) {
+//        return String.format("<a href=\"https://edu.21-school.ru/profile/%s@student.21-school.ru\">", user.getLogin())
+//                + user.getLogin() + "</a>";
+//    }
 
     private String getCurrentProject(User user) {
         String projectsStr = user.getProjects();
@@ -63,13 +69,14 @@ public class UserView {
             for (JsonNode projectJson : projectListJson) {
                 String projectStatus = projectJson.get(GOAL_STATUS).asText();
                 if (ProjectStatus.IN_PROGRESS.toString().equals(projectStatus)) {
-                    currentProjectSb.append(projectJson.get(PROJECT_NAME).asText()).append(" ");
+                    currentProjectSb.append(projectJson.get(PROJECT_NAME).asText()).append(", ");
                 }
             }
         } catch (JsonProcessingException e) {
             System.out.println("[userService] getCurrentProject ERROR " + e.getMessage());
         }
-        return currentProjectSb.toString();
+        String result = currentProjectSb.toString();
+        return result.length() > 2 ? result.substring(0, result.length() - 2) : result;
     }
 
     private int getXpDiff(User user, int noOfMonths) {
