@@ -5,17 +5,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.platform.View.UserView;
 import edu.platform.models.ProjectStatus;
 import edu.platform.models.User;
 import edu.platform.repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-@Component
+@Service
 public class UserService {
 
     private static final String LOGIN = "login";
@@ -64,13 +67,18 @@ public class UserService {
     }
 
     public String getTestInfo() {
-        List<User> usersList = userRepo.findTopByLevel(10);
+        List<User> usersList = userRepo.findAllByLevel(10);
         ArrayNode resultUsersArr = mapper.createArrayNode();
         for (User user : usersList) {
             resultUsersArr.add(getUserJson(user));
         }
         JsonNode result = mapper.createObjectNode().set("data", resultUsersArr);
         return result.toString();
+    }
+
+    public List<UserView> getTempInfo() {
+        List<User> userList = userRepo.findAllByLevel(10);
+        return userList.stream().map(UserView::new).toList();
     }
 
     private ObjectNode getUserJson(User user) {
@@ -90,6 +98,8 @@ public class UserService {
         userJson.put(CURRENT_PROJECT, getCurrentProject(user));
         return userJson;
     }
+
+
 
     private String getCurrentProject(User user) {
         String projectsStr = user.getProjects();

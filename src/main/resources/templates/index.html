@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
+    <link href="theme.css" rel="stylesheet">
     <title>21 world - peer statistic</title>
 </head>
 <body>
@@ -25,151 +26,63 @@
     <div class="content_wrapper">
 <!--        <h2>Подзаголовок</h2>-->
         <div class="content">
+            <main id="main">
+                <section id="table-container">
+                    <div data-st-loading-indicator="">
+                        Processing ...
+                    </div>
 <!--            <p>Основное содержимое</p>-->
-            <div id="table-container">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>
-<!--                            <label for="name">Name</label>-->
-                            <input data-st-filter="login" id="login" type="text"/>
-                        </th>
-                        <th>
-<!--                            <label for="gender">Gender</label>-->
-                            <select name="campus" data-st-filter="campus" data-st-filter-operator="is" id="campus">
-                                <option value="Moscow">Москва</option>
-                            </select>
-                        </th>
-                        <th>
-                            <!--                            <label for="gender">Gender</label>-->
-                            <select name="coalition" data-st-filter="coalition" data-st-filter-operator="is" id="coalition">
-                                <option value="">Все</option>
-                                <option value="Alpacas">Альпаки</option>
-                                <option value=" Capybaras">Капибары</option>
-                                <option value="Honey Badgers">Медоеды</option>
-                                <option value="Salamanders">Саламандры</option>
-                            </select>
-                        </th>
-                        <th>
-                            <!--                            <label for="gender">Gender</label>-->
-                            <select name="wave" data-st-filter="wave" data-st-filter-operator="is" id="wave">
-                                <option value="">-</option>
-                            </select>
-                        </th>
-                        <th>
-                            <!--                            <label for="gender">Gender</label>-->
-                            <select name="bootcamp" data-st-filter="bootcamp" data-st-filter-operator="is" id="bootcamp">
-                                <option value="">-</option>
-                            </select>
-                        </th>
-                        <th>
-                            <!--                            <label for="gender">Gender</label>-->
-                            <select name="level" data-st-filter="level" data-st-filter-operator="is" id="level">
-                                <option value="">-</option>
-                            </select>
-                        </th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th>
-                            <!--                            <label for="gender">Gender</label>-->
-                            <select name="currentProject" data-st-filter="currentProject" data-st-filter-operator="is" id="currentProject">
-                                <option value="">-</option>
-                            </select>
-                        </th>
-
-                    </tr>
-                    <tr>
-                        <th data-st-sort="login" data-st-sort-cycle>Login</th>
-                        <th data-st-sort="campus">Campus</th>
-                        <th data-st-sort="coalition">Coalition</th>
-                        <th data-st-sort="wave">Wave</th>
-                        <th data-st-sort="bootcamp">Bootcamp</th>
-                        <th data-st-sort="level">Level</th>
-                        <th data-st-sort="xp">XP</th>
-                        <th data-st-sort="peerPoints">Peer points</th>
-                        <th data-st-sort="codeReviewPoints">Code review points</th>
-                        <th data-st-sort="coins">Coins</th>
-                        <th data-st-sort="diffMonth">Month dynamic</th>
-                        <th data-st-sort="diff3month">3 months dynamic</th>
-                        <th data-st-sort="currentProject">Current project</th>
-
-                    </tr>
-
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td colspan="5">Loading data ...</td>
-                    </tr>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td colspan="3" data-st-summary></td>
-                        <td colspan="2">
-                            <div data-st-pagination></div>
-                        </td>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-
-<!--            <div id="table-container">-->
-<!--                <table>-->
-<!--                    <thead>-->
-<!--                    <tr>-->
-<!--                        <th>Surname</th>-->
-<!--                        <th>Name</th>-->
-<!--                    </tr>-->
-<!--                    </thead>-->
-<!--                    <tbody></tbody>-->
-<!--                </table>-->
-<!--            </div>-->
-<!--            <script>-->
-<!--                import { table as tableComponentFactory } from "smart-table-vanilla";-->
-<!--                import { table } from "smart-table";-->
-
-<!--                const el = document.getElementById("table-container");-->
-
-<!--                const tbody = el.querySelector("tbody");-->
-<!--                const rowFactory = ({-->
-<!--                                        surname,-->
-<!--                                        name-->
-<!--                                    }) => {-->
-<!--                    const tr = document.createElement("tr");-->
-<!--                    tr.innerHTML = `<td>${surname}</td><td>${name}</td>`;-->
-<!--                    return tr;-->
-<!--                };-->
-
-<!--                let xhr = new XMLHttpRequest();-->
-<!--                xhr.open('GET', '/article/xmlhttprequest/example/json');-->
-<!--                xhr.responseType = 'json';-->
-<!--                xhr.send();-->
-<!--                let responseObj-->
-<!--                xhr.onload = function() {-->
-<!--                    responseObj = xhr.response;-->
-<!--                    alert(responseObj.message); // Привет, мир!-->
-<!--                };-->
-
-<!--                const t = table(responseObj.get("data"));-->
-<!--                const tableComponent = tableComponentFactory({ el, table: t });-->
-
-<!--                tableComponent.onDisplayChange(displayed => {-->
-<!--                    tbody.innerHTML = "";-->
-<!--                    for (let r of displayed) {-->
-<!--                        const newChild = rowFactory(r.value);-->
-<!--                        tbody.appendChild(newChild);-->
-<!--                    }-->
-<!--                });-->
-<!--            </script>-->
-<!--        </div>-->
-
+                    <div th:if="${ not#lists.isEmpty(users)}">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th data-st-sort="login">Login</th>
+                                    <th data-st-sort="campus">Campus</th>
+                                    <th data-st-sort="coalition">Coalition</th>
+                                    <th data-st-sort="wave">Wave</th>
+                                    <th data-st-sort="bootcamp">Bootcamp</th>
+                                    <th>Level</th>
+                                    <th>Xp</th>
+                                    <th>Peer points</th>
+                                    <th>CR points</th>
+                                    <th>Coins</th>
+                                    <th>Month XP</th>
+                                    <th>3 Months XP</th>
+                                    <th>Current project</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td th:text="${user.login}">Login</td>
+                                    <td th:text="${user.campus}"></td>
+                                    <td th:text="${user.coalition}"></td>
+                                    <td th:text="${user.wave}"></td>
+                                    <td th:text="${user.bootcamp}"></td>
+                                    <td th:text="${user.level}"></td>
+                                    <td th:text="${user.xp}"></td>
+                                    <td th:text="${user.peerPoints}"></td>
+                                    <td th:text="${user.codeReviewPoints}"></td>
+                                    <td th:text="${user.coins}"></td>
+                                    <td th:text="${user.diff}"></td>
+                                    <td th:text="${user.diff3}"></td>
+                                    <td th:text="${user.currentProject}"></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <td colspan="3" data-st-summary></td>
+                                <td colspan="2">
+                                    <div data-st-pagination></div>
+                                </td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 </div>
-
 <script src="dataBundle.js"></script>
 <script src="bundle.js"></script>
 
