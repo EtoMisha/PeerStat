@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="data-table-lib/css/datatable.css" />
+    <title>21 world - peer statistic</title>
+</head>
+<body>
+<div class="wrapper">
+
+    <div class="header">
+        <div class="logo">
+            <a href="/"><img src="images/logo.png" alt="21 school"></a>
+        </div>
+        <div class="menu">
+            <ul>
+                <li>Карта пиров</li>
+                <li><a href="/">Статистика</a></li>
+            </ul>
+        </div>
+<!--        <div class="header-text">-->
+<!--            <h1><a href="index.html">Info 21 v2 by fbeatris</a></h1>-->
+<!--        </div>-->
+    </div>
+
+    <div class="content_wrapper">
+<!--        <h2>Подзаголовок</h2>-->
+        <div class="content">
+            <p><iframe src="https://www.google.com/maps/d/embed?mid=1N8kLjBsam6ILhmhvaT3tmKeYF8ArhO8&amp;ehbc=2E312F" width="1200" height="800"></iframe></p>
+<!--            <p>Основное содержимое</p>-->
+            <div class="map_text">
+                <h2>Добавь себя на карту</h2>
+
+                <div class="map_form">
+                    <form action="/#wpcf7-f14-p5-o1" method="post" class="wpcf7-form init" novalidate="novalidate" data-status="init">
+                        <div style="display: none;">
+                            <input type="hidden" name="_wpcf7" value="14">
+                            <input type="hidden" name="_wpcf7_version" value="5.6.2">
+                            <input type="hidden" name="_wpcf7_locale" value="ru_RU">
+                            <input type="hidden" name="_wpcf7_unit_tag" value="wpcf7-f14-p5-o1">
+                            <input type="hidden" name="_wpcf7_container_post" value="5">
+                            <input type="hidden" name="_wpcf7_posted_data_hash" value="">
+                        </div>
+                        <p><label> Имя и/или ник<br>
+                            <span class="wpcf7-form-control-wrap" data-name="Uname"><input type="text" name="Uname" value="" size="40" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" aria-required="true" aria-invalid="false"></span> </label></p>
+                        <p>Твой «родной» кампус<br>
+                            <span class="wpcf7-form-control-wrap" data-name="Ucampus"><span class="wpcf7-form-control wpcf7-radio"><span class="wpcf7-list-item first"><label><input type="radio" name="Ucampus" value="Москва" checked="checked"><span class="wpcf7-list-item-label">Москва</span></label></span><span class="wpcf7-list-item"><label><input type="radio" name="Ucampus" value="Казань"><span class="wpcf7-list-item-label">Казань</span></label></span><span class="wpcf7-list-item last"><label><input type="radio" name="Ucampus" value="Новосибирск"><span class="wpcf7-list-item-label">Новосибирск</span></label></span></span></span></p>
+                        <p>Платформа<br>
+                            <span class="wpcf7-form-control-wrap" data-name="Uplatform"><span class="wpcf7-form-control wpcf7-radio"><span class="wpcf7-list-item first"><label><input type="radio" name="Uplatform" value="Интра" checked="checked"><span class="wpcf7-list-item-label">Интра</span></label></span><span class="wpcf7-list-item"><label><input type="radio" name="Uplatform" value="Сберплатформа"><span class="wpcf7-list-item-label">Сберплатформа</span></label></span><span class="wpcf7-list-item"><label><input type="radio" name="Uplatform" value="Выпускник"><span class="wpcf7-list-item-label">Выпускник</span></label></span><span class="wpcf7-list-item last"><label><input type="radio" name="Uplatform" value="deactivated"><span class="wpcf7-list-item-label">deactivated</span></label></span></span></span></p>
+                        <p><label> Название города/страны или точные координаты<br>
+                            <span class="wpcf7-form-control-wrap" data-name="Upoint"><input type="text" name="Upoint" value="" size="40" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" aria-required="true" aria-invalid="false"></span> </label></p>
+                        <p><label> Любые контакты, какие хочешь оставить: телега, слак, соцсети и тд.<br>
+                            <span class="wpcf7-form-control-wrap" data-name="Ucontacts"><input type="text" name="Ucontacts" value="" size="40" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" aria-required="true" aria-invalid="false"></span> </label></p>
+                        <p><label> Комментарий или доп информация (необязательно)<br>
+                            <span class="wpcf7-form-control-wrap" data-name="Umessage"><textarea name="Umessage" cols="40" rows="10" class="wpcf7-form-control wpcf7-textarea" aria-invalid="false"></textarea></span> </label></p>
+                        <p><input type="submit" value="Отправить" class="wpcf7-form-control has-spinner wpcf7-submit"><span class="wpcf7-spinner"></span></p>
+                        <div class="wpcf7-response-output" aria-hidden="true"></div></form>
+                </div>
+                <h2>Что это и зачем</h2>
+                <p>Кампус школы всегда был и остается точкой притяжения, но сейчас многие пиры уезжают из России. С одной стороны здорово, что они теперь в безопасности, с другой - мы хотим не потеряться, сохранить наше комьюнити, даже если не можем больше видеться в кампусе.
+                </p>
+                <p>Для этого мы запускаем проект «21 world» - на первом этапе это карта пиров.
+                </p>
+                <p>Заполни форму - где ты и как можно связаться. Это поможет пирам в разных городах и странах найти друг друга, может чем-то помочь, скооперироваться или просто пообщаться со своими.
+                </p>
+                <p>Отправь эту ссылку пиру, который уехал, по которому ты скучаешь, пусть заполнит и будет рядом.
+                </p>
+                <p>Если надо что-то изменить в твоей точке, просто заполни форму заново и укажи в комментах что это изменения.
+                </p>
+                <p>21 world - проект пиров для пиров. Если есть идеи что добавить, изменить, автоматизировать - напиши пожалуйста: <a href="https://t.me/eto_misha">https://t.me/eto_misha</a> или <a href="https://t.me/gortsevskiy">https://t.me/gortsevskiy</a>
+                </p>
+            </div>
+        </div>
+    </div>
+<!--    <div class="copyright">&#169; fbeatris</div>-->
+</div>
+
+</body>
+</html>

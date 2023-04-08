@@ -13,8 +13,9 @@ import java.util.Map;
 
 @Data
 @Component
-public class UserView {
+public class UserObjectView {
     private String login;
+    private String email;
     private String campus;
     private String coalition;
     private String wave;
@@ -35,16 +36,18 @@ public class UserView {
     private static final String PROJECT_NAME = "name";
     private static final String AWARD_DATE = "awardDate";
     private static final String XP_VALUE = "expValue";
-    private static final String NO_BOOTCAMP = "";
+    private static final String NO_BOOTCAMP = "No bootcamp";
+    private static final String WAVE_PREFIX = "O_msk_";
 
-    public UserView() {
+    public UserObjectView() {
     }
 
-    public UserView(User user) {
+    public UserObjectView(User user) {
         this.login = user.getLogin();
+        this.email = user.getEmail();
         this.campus = campusNames.get(user.getSchoolId());
         this.coalition = user.getCoalitionName();
-        this.wave = user.getWaveName();
+        this.wave = getWaveName(user);
         this.bootcamp = user.getBootcampName().equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
         this.level = user.getLevel();
         this.xp = user.getXp();
@@ -55,11 +58,6 @@ public class UserView {
         this.diff3 = getXpDiff(user, 3);
         this.currentProject = getCurrentProject(user);
     }
-//
-//    private String getProfileLink(User user) {
-//        return String.format("<a href=\"https://edu.21-school.ru/profile/%s@student.21-school.ru\">", user.getLogin())
-//                + user.getLogin() + "</a>";
-//    }
 
     private String getCurrentProject(User user) {
         String projectsStr = user.getProjects();
@@ -97,5 +95,13 @@ public class UserView {
             System.out.println("[userService] getMonthDiff ERROR " + e.getMessage());
         }
         return diff;
+    }
+
+    private String getWaveName(User user) {
+        String waveName = user.getWaveName();
+        if (waveName.contains(WAVE_PREFIX) && waveName.length() < 14) {
+
+        }
+        return waveName;
     }
 }

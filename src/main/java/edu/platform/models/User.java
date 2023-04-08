@@ -48,9 +48,9 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String projects;
 
-    @ToString.Exclude
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<UserProject> userProjectList;
+//    @ToString.Exclude
+//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    private List<UserProject> userProjectList;
 
     public User(String login) {
         this.login = login;

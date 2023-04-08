@@ -17,4 +17,5 @@ public interface UserRepo extends CrudRepository<User, Long> {
 
     List<User> findAllByLevel(int level);
 
+
 }

@@ -38,9 +38,11 @@ public class Controller {
 //    }
 //
 //    @GetMapping("/test")
-//    public String getTestInfo(Model model) {
-//        model.addAttribute("users", userService.getTestInfo());
-//        return "index.html";
+//    public ModelAndView getTestInfo() {
+//        ModelAndView modelAndView = new ModelAndView("index");
+//        modelAndView.addObject("users", userService.getTestInfo());
+//        System.out.println("getTestInfo " + userService.getTestInfo());
+//        return modelAndView;
 //    }
 
 }

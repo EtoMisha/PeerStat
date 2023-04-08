@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.platform.View.UserView;
+import edu.platform.View.UserObjectView;
 import edu.platform.models.ProjectStatus;
 import edu.platform.models.User;
 import edu.platform.repo.UserRepo;
@@ -16,7 +16,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -50,9 +49,16 @@ public class UserService {
         this.userRepo = userRepo;
     }
 
-    public List<UserView> getAllUsers() {
+    public List<UserObjectView> getAllUsers() {
         List<User> userList = userRepo.findByOrderByXpDesc();
-        return userList.stream().map(UserView::new).toList();
+        return userList.stream().map(UserObjectView::new).toList();
+//        List<UserObjectView> result = new ArrayList<>();
+//        for (UserObjectView u : rawList) {
+//            if (!u.getBootcamp().equals("No bootcamp")) {
+//                result.add(u);
+//            }
+//        }
+//        return result;
     }
 
 //

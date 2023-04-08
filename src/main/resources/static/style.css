@@ -43,8 +43,13 @@ hr {
     padding-left: 0;
 }
 
+p, h2 {
+    margin: 0 0 15px;
+}
+
 a {
-    text-decoration: none;
+    text-decoration: underline;
+    color: black;
 }
 
 a:focus {
@@ -105,11 +110,13 @@ button:focus {
 }
 
 .menu {
-    /*text-align: center;*/
-    padding-top: 1em;
-    padding-bottom: 2em;
-    /*float: left;*/
-    display: inline;
+    font-size: 150%;
+    display: inline-block;
+    position: absolute;
+    top: 35px;
+    margin-left: 80px;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 .menu li {
@@ -131,6 +138,7 @@ button:focus {
     background-repeat: no-repeat;
     background-size: 5em;
     margin-left: 1em;
+    margin-bottom: 1em;
 }
 
 .content_wrapper {
@@ -138,7 +146,8 @@ button:focus {
 }
 
 .content {
-    margin-top: 1em;
+    margin-top: 3em;
+    margin-bottom: 1em;
 }
 
 table, th, td {
@@ -149,6 +158,11 @@ table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+}
+
+th {
+    text-align: left;
+    padding: 10px;
 }
 
 tr:nth-child(even) {
@@ -173,6 +187,7 @@ td:nth-of-type(2) {
 th:nth-of-type(3),
 td:nth-of-type(3) {
     width:7%;
+    white-space: normal;
 }
 th:nth-of-type(4),
 td:nth-of-type(4) {
@@ -211,5 +226,19 @@ td:nth-of-type(12) {
     width:9%;
 }
 
+th:nth-of-type(13),
+td:nth-of-type(13) {
+    white-space: normal;
+}
 
+.copyright {
+    position: absolute;
+    right: 50px;
+    bottom: 50px;
+    font-size: small;
+}
 
+.map_text {
+    width: 1200px;
+    margin-bottom: 100px;
+}
