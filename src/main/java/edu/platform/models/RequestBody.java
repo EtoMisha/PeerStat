@@ -16,21 +16,6 @@ public class RequestBody {
             """, user.getStudentId());
     }
 
-//    public static String getMyCoalitionMembers(int offset) {
-//        return String.format("""
-//                {
-//                  "operationName": "competitionCoalitionGetMyCoalitionMembers",
-//                  "variables": {
-//                    "page": {
-//                      "offset": %d,
-//                      "limit": 20
-//                    }
-//                  },
-//                  "query": "query competitionCoalitionGetMyCoalitionMembers($page: PagingInput) {\\n  student {\\n    getUserTournamentWidget {\\n      getMyCoalitionMembers(page: $page) {\\n        user {\\n          id\\n          login\\n          avatarUrl\\n          userExperience {\\n            level {\\n              id\\n              levelCode\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
-//                }
-//                """, offset);
-//    }
-
     public static String getCredentialInfo(User user) {
         return String.format("""
                 {

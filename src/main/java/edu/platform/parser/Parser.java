@@ -1,17 +1,14 @@
-package edu.platform;
+package edu.platform.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.platform.models.ProjectStatus;
 import edu.platform.models.RequestBody;
 import edu.platform.models.User;
 import edu.platform.repo.UserRepo;
-import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,12 +18,15 @@ import org.springframework.web.client.RestTemplate;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
+
+import static edu.platform.parser.GraphQLConstants.*;
 
 @Component
 public class Parser {
 
-    private ApplicationContext context;
+    private UserRepo userRepo;
 
     @Value("${parser.usersList}")
     private String usersList;
@@ -43,56 +43,11 @@ public class Parser {
 
     private static final String URL = "https://edu.21-school.ru/services/graphql";
 
-    private static final String DATA = "data";
-    private static final String GET_STUDENT_BY_LOGIN = "getStudentByLogin";
-    private static final String STUDENT_ID = "studentId";
-    private static final String USER_ID = "userId";
-    private static final String SCHOOL_ID = "schoolId";
-    private static final String IS_ACTIVE = "isActive";
-    private static final String IS_GRADUATE = "isGraduate";
-
-    private static final String STUDENT = "student";
-    private static final String STAGE_INFO = "getStageGroupS21PublicProfile";
-    private static final String WAVE_ID = "waveId";
-    private static final String WAVE_NAME = "waveName";
-    private static final String EDU_FORM = "eduForm";
-
-    private static final String XP_INFO = "getExperiencePublicProfile";
-    private static final String VALUE = "value";
-    private static final String LEVEL = "level";
-    private static final String LEVEL_CODE = "levelCode";
-    private static final String RANGE = "range";
-    private static final String LEFT_BORDER = "leftBorder";
-    private static final String RIGHT_BORDER = "rightBorder";
-    private static final String PEER_POINTS = "cookiesCount";
-    private static final String COINS_COUNT = "coinsCount";
-    private static final String CODE_REVIEW_POINTS = "codeReviewPoints";
-    private static final String EMAIL = "getEmailbyUserId";
-
-    private static final String TOURNAMENT = "getUserTournamentWidget";
-    private static final String MEMBER = "coalitionMember";
-    private static final String COALITION = "coalition";
-    private static final String NAME = "name";
-
-    private static final String SCHOOL_21 = "school21";
-    private static final String LOAD_STAGE_GROUPS = "loadStudentStageGroupsS21PublicProfile";
-    private static final String STAGE_GROUPS = "stageGroupS21";
-    private static final String SURVIVAL_CAMP = "Survival camp";
-    private static final String XP_HISTORY = "getExperienceHistoryDate";
-    private static final String HISTORY = "history";
-    private static final String TYPENAME = "__typename";
-
-    private static final String STUDENT_PROJECT = "getStudentProjectsForPublicProfileByStageGroup";
-    private static final String GOAL_STATUS = "goalStatus";
-    private static final String STATUS_UNAVAILABLE = "UNAVAILABLE";
-
-    private static final String CORE_PROGRAM = "Core program";
-
     public Parser() {}
 
     @Autowired
-    public void setContext(ApplicationContext context) {
-        this.context = context;
+    public void setRepo(UserRepo userRepo) {
+        this.userRepo = userRepo;
     }
 
     private void initHeaders() {
@@ -102,49 +57,66 @@ public class Parser {
         headers.add("authority", "edu.21-school.ru");
     }
 
-    public String getUsersList() {
-        return usersList;
-    }
-
-    public String getSchoolId() {
-        return schoolId;
-    }
-
-    public String getCookie() {
-        return cookie;
-    }
-
     public void initUsers(){
         initHeaders();
-        System.out.println("[Headers] " + headers);
+        System.out.println("[initUsers] headers " + headers);
 
         Scanner scanner;
         try {
             scanner = new Scanner(new File(usersList));
             while (scanner.hasNext()) {
                 String login = scanner.nextLine();
-//            String login = "azraelna";
-                try {
-                    User user = new User(login);
-                    setCredentials(user);
-                    setPersonalInfo(user);
-                    if (CORE_PROGRAM.equals(user.getEduForm())) {
-                        setCoalitionInfo(user);
-                        setStageInfo(user);
-                        setXpHistory(user);
-                        setProject(user);
-                        saveUser(user);
-                        System.out.println("[Parser] user done " + login);
-                    } else {
-                        System.out.println("[Parser] user skipped " + login);
-                    }
-                } catch (IOException e) {
-                    System.out.println("[Parser] ERROR " + e.getMessage());
-                }
+                parseUser(login);
             }
 
         } catch (FileNotFoundException e) {
-            System.out.println("[Parser] ERROR " + e.getMessage());
+            System.out.println("[initUsers] ERROR " + e.getMessage());
+        }
+    }
+
+    private void parseUser(String login) {
+        try {
+            User user = new User(login);
+            setCredentials(user);
+            setPersonalInfo(user);
+            if (CORE_PROGRAM.equals(user.getEduForm())) {
+                setCoalitionInfo(user);
+                setStageInfo(user);
+                setXpHistory(user);
+                setProject(user);
+                saveUser(user);
+                System.out.println("[parseUser] user done " + login);
+            } else {
+                System.out.println("[parseUser] user skipped " + login);
+            }
+        } catch (IOException e) {
+            System.out.println("[parseUser] ERROR " + e.getMessage());
+        }
+    }
+
+    public void testInit(){
+        initHeaders();
+        System.out.println("[testInit] headers " + headers);
+
+        String login = "fbeatris";
+        parseUser(login);
+    }
+
+    public void updateUsers() {
+        List<User> usersList = userRepo.findAll();
+        for (User user : usersList) {
+            try {
+                setCredentials(user);
+                setPersonalInfo(user);
+                setXpHistory(user);
+                setProject(user);
+
+                updateUser(user);
+                System.out.println("[updateUsers] user " + user.getLogin() + " ok");
+
+            } catch (IOException e) {
+                System.out.println("[updateUsers] ERROR " + e.getMessage());
+            }
         }
     }
 
@@ -208,7 +180,6 @@ public class Parser {
                     && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION) != null
                     && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME) != null){
                 coalitionName = coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME).asText();
-//            coalitionName = coalitionInfo.at("/" + STUDENT + "/" + TOURNAMENT + "/" + MEMBER + "/" + COALITION + "/" + NAME + "/").asText();
             }
         }
         user.setCoalitionName((coalitionName != null && !coalitionName.isEmpty()) ? coalitionName : "No Coalition");
@@ -275,14 +246,24 @@ public class Parser {
     }
 
     private void saveUser(User user) {
-        UserRepo userRepo = context.getBean(UserRepo.class);
-//        User foundUser = userRepo.findUserByLogin(user.getLogin());
-//        if (foundUser == null) {
-            userRepo.save(user);
-//        } else {
-//            userRepo.
-//        }
-
+        userRepo.save(user);
     }
+
+    private void updateUser(User user) {
+        userRepo.save(user);
+    }
+
+    public String getUsersList() {
+        return usersList;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public String getCookie() {
+        return cookie;
+    }
+
 
 }

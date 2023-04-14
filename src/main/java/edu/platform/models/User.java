@@ -2,20 +2,17 @@ package edu.platform.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
-
-import java.util.List;
 
 @Data
 @Entity
 @Table(name = "users")
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.AUTO)
+//    private Long id;
 
-    @Column(unique=true)
+    @Id
     private String login;
 
     private String userId;
@@ -47,10 +44,6 @@ public class User {
 
     @Column(columnDefinition = "TEXT")
     private String projects;
-
-//    @ToString.Exclude
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<UserProject> userProjectList;
 
     public User(String login) {
         this.login = login;
