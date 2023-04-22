@@ -24,13 +24,13 @@ public class Runner {
     public void run() {
         testInit();
 //        initUsers();
-
-        LocalTime runTime = LocalTime.parse(runTimeSetting);
-        System.out.println("[run] rinTime " + runTime);
-
-        long delay = ChronoUnit.MILLIS.between(LocalTime.now(), runTime);
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.schedule(this::updateUsers, delay, TimeUnit.MILLISECONDS);
+//
+//        LocalTime runTime = LocalTime.parse(runTimeSetting);
+//        System.out.println("[run] rinTime " + runTime);
+//
+//        long delay = ChronoUnit.MILLIS.between(LocalTime.now(), runTime);
+//        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+//        scheduler.schedule(this::updateUsers, delay, TimeUnit.MILLISECONDS);
     }
 
     private void updateUsers() {
