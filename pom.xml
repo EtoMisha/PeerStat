@@ -73,7 +73,39 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+<!--            <plugin>-->
+<!--                <groupId>io.fabric8</groupId>-->
+<!--                <artifactId>docker-maven-plugin</artifactId>-->
+<!--                <version>0.20.1</version>-->
+<!--                <configuration>-->
+<!--                    <images>-->
+<!--                        <image>-->
+<!--                            <name>app</name>-->
+<!--                            <build>-->
+<!--                                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>-->
+<!--                                <assembly>-->
+<!--                                    <mode>dir</mode>-->
+<!--                                    <targetDir>/app</targetDir>-->
+<!--                                    <descriptor>${project.basedir}/src/main/docker/assembly.xml</descriptor>-->
+<!--                                </assembly>-->
+<!--                            </build>-->
+<!--                        </image>-->
+<!--                    </images>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>build</id>-->
+<!--                        <phase>install</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>build</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
+
+
 
 </project>

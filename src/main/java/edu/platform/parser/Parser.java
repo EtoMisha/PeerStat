@@ -6,13 +6,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.platform.models.RequestBody;
 import edu.platform.models.User;
-import edu.platform.repo.UserRepo;
+import edu.platform.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
@@ -26,7 +25,7 @@ import static edu.platform.parser.GraphQLConstants.*;
 @Component
 public class Parser {
 
-    private UserRepo userRepo;
+    private UserRepository userRepository;
 
     @Value("${parser.usersList}")
     private String usersList;
@@ -46,8 +45,8 @@ public class Parser {
     public Parser() {}
 
     @Autowired
-    public void setRepo(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    public void setRepo(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     private void initHeaders() {
@@ -89,8 +88,8 @@ public class Parser {
             } else {
                 System.out.println("[parseUser] user skipped " + login);
             }
-        } catch (IOException e) {
-            System.out.println("[parseUser] ERROR " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("[parseUser] ERROR " + login + " " + e.getMessage());
         }
     }
 
@@ -103,7 +102,7 @@ public class Parser {
     }
 
     public void updateUsers() {
-        List<User> usersList = userRepo.findAll();
+        List<User> usersList = userRepository.findAll();
         for (User user : usersList) {
             try {
                 setCredentials(user);
@@ -114,143 +113,158 @@ public class Parser {
                 updateUser(user);
                 System.out.println("[updateUsers] user " + user.getLogin() + " ok");
 
-            } catch (IOException e) {
-                System.out.println("[updateUsers] ERROR " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("[updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
             }
         }
     }
 
     private void setCredentials(User user) throws IOException {
         JsonNode credentialsInfo = sendRequest(RequestBody.getCredentialInfo(user));
-        JsonNode studentJson = credentialsInfo.get(SCHOOL_21).get(GET_STUDENT_BY_LOGIN);
-        String studentId = studentJson.get(STUDENT_ID).asText();
-        String userId = studentJson.get(USER_ID).asText();
-        String schoolId = studentJson.get(SCHOOL_ID).asText();
-        boolean isActive = studentJson.get(IS_ACTIVE).asBoolean();
-        boolean isGraduate = studentJson.get(IS_GRADUATE).asBoolean();
+        if (!credentialsInfo.isEmpty()) {
+            JsonNode studentJson = credentialsInfo.get(SCHOOL_21).get(GET_STUDENT_BY_LOGIN);
+            String studentId = studentJson.get(STUDENT_ID).asText();
+            String userId = studentJson.get(USER_ID).asText();
+            String schoolId = studentJson.get(SCHOOL_ID).asText();
+            boolean isActive = studentJson.get(IS_ACTIVE).asBoolean();
+            boolean isGraduate = studentJson.get(IS_GRADUATE).asBoolean();
 
-        user.setStudentId(studentId);
-        user.setUserId(userId);
-        user.setSchoolId(schoolId);
-        user.setActive(isActive);
-        user.setGraduate(isGraduate);
+            user.setStudentId(studentId);
+            user.setUserId(userId);
+            user.setSchoolId(schoolId);
+            user.setActive(isActive);
+            user.setGraduate(isGraduate);
+        }
     }
 
     private void setPersonalInfo(User user) throws IOException {
         JsonNode personalInfo = sendRequest(RequestBody.getPersonalInfo(user));
-        JsonNode student = personalInfo.get(STUDENT);
-        JsonNode stageInfo = student.get(STAGE_INFO);
+        if (!personalInfo.isEmpty()) {
+            JsonNode student = personalInfo.get(STUDENT);
+            JsonNode stageInfo = student.get(STAGE_INFO);
 
-        int waveId = stageInfo.get(WAVE_ID) != null ? stageInfo.get(WAVE_ID).asInt() : 0;
-        String waveName = stageInfo.get(WAVE_NAME) != null ? stageInfo.get(WAVE_NAME).asText() : "No wave";
-        String eduForm = stageInfo.get(EDU_FORM) != null ? stageInfo.get(EDU_FORM).asText() : "No edu form";
+            int waveId = stageInfo.get(WAVE_ID) != null ? stageInfo.get(WAVE_ID).asInt() : 0;
+            String waveName = stageInfo.get(WAVE_NAME) != null ? stageInfo.get(WAVE_NAME).asText() : "No wave";
+            String eduForm = stageInfo.get(EDU_FORM) != null ? stageInfo.get(EDU_FORM).asText() : "No edu form";
 
-        JsonNode xpInfo = student.get(XP_INFO);
-        int xpValue = xpInfo.get(VALUE).asInt();
-        JsonNode level = xpInfo.get(LEVEL);
-        int levelCode = level.get(LEVEL_CODE).asInt();
-        int leftBorder = level.get(RANGE).get(LEFT_BORDER).asInt();
-        int rightBorder = level.get(RANGE).get(RIGHT_BORDER).asInt();
-        int peerPoints = xpInfo.get(PEER_POINTS).asInt();
-        int coinsCount = xpInfo.get(COINS_COUNT).asInt();
-        int codeReviewPoints = xpInfo.get(CODE_REVIEW_POINTS).asInt();
+            JsonNode xpInfo = student.get(XP_INFO);
+            int xpValue = xpInfo.get(VALUE).asInt();
+            JsonNode level = xpInfo.get(LEVEL);
+            int levelCode = level.get(LEVEL_CODE).asInt();
+            int leftBorder = level.get(RANGE).get(LEFT_BORDER).asInt();
+            int rightBorder = level.get(RANGE).get(RIGHT_BORDER).asInt();
+            int peerPoints = xpInfo.get(PEER_POINTS).asInt();
+            int coinsCount = xpInfo.get(COINS_COUNT).asInt();
+            int codeReviewPoints = xpInfo.get(CODE_REVIEW_POINTS).asInt();
 
-        String email = student.get(EMAIL).asText();
+            String email = student.get(EMAIL).asText();
 
-        user.setWaveId(waveId);
-        user.setWaveName(waveName);
-        user.setEduForm(eduForm);
-        user.setXp(xpValue);
-        user.setLevel(levelCode);
-        user.setLeftBorder(leftBorder);
-        user.setRightBorder(rightBorder);
-        user.setPeerPoints(peerPoints);
-        user.setCoins(coinsCount);
-        user.setCodeReviewPoints(codeReviewPoints);
-        user.setEmail(email);
+            user.setWaveId(waveId);
+            user.setWaveName(waveName);
+            user.setEduForm(eduForm);
+            user.setXp(xpValue);
+            user.setLevel(levelCode);
+            user.setLeftBorder(leftBorder);
+            user.setRightBorder(rightBorder);
+            user.setPeerPoints(peerPoints);
+            user.setCoins(coinsCount);
+            user.setCodeReviewPoints(codeReviewPoints);
+            user.setEmail(email);
+        }
     }
 
     private void setCoalitionInfo(User user) throws IOException {
         JsonNode coalitionInfo = sendRequest(RequestBody.getCoalitionInfo(user));
-        String coalitionName = null;
-        if (coalitionInfo != null) {
+        if (!coalitionInfo.isEmpty()) {
+            String coalitionName = null;
             if (coalitionInfo.get(STUDENT) != null
-                    && coalitionInfo.get(STUDENT).get(TOURNAMENT) != null
-                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER) != null
-                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION) != null
+//                    && coalitionInfo.get(STUDENT).get(TOURNAMENT) != null
+//                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER) != null
+//                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION) != null
                     && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME) != null){
                 coalitionName = coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME).asText();
             }
+            user.setCoalitionName((coalitionName != null && !coalitionName.isEmpty()) ? coalitionName : "No Coalition");
         }
-        user.setCoalitionName((coalitionName != null && !coalitionName.isEmpty()) ? coalitionName : "No Coalition");
     }
 
     private void setStageInfo(User user) throws IOException {
         JsonNode stageInfo = sendRequest(RequestBody.getStageInfo(user));
-        JsonNode school21 = stageInfo.get(SCHOOL_21);
-        JsonNode stageGroupsArr = school21.get(LOAD_STAGE_GROUPS);
+        if (!stageInfo.isEmpty()) {
+            JsonNode school21 = stageInfo.get(SCHOOL_21);
+            JsonNode stageGroupsArr = school21.get(LOAD_STAGE_GROUPS);
 
-        String bootcampId = null;
-        String bootcampName = null;
-        for (JsonNode stageGroup : stageGroupsArr) {
-            String eduForm = stageGroup.get(STAGE_GROUPS).get(EDU_FORM).asText();
-            if (SURVIVAL_CAMP.equals(eduForm)) {
-                bootcampId = stageGroup.get(STAGE_GROUPS).get(WAVE_ID).asText();
-                bootcampName = stageGroup.get(STAGE_GROUPS).get(WAVE_NAME).asText();
+            String bootcampId = null;
+            String bootcampName = null;
+            for (JsonNode stageGroup : stageGroupsArr) {
+                String eduForm = stageGroup.get(STAGE_GROUPS).get(EDU_FORM).asText();
+                if (SURVIVAL_CAMP.equals(eduForm)) {
+                    bootcampId = stageGroup.get(STAGE_GROUPS).get(WAVE_ID).asText();
+                    bootcampName = stageGroup.get(STAGE_GROUPS).get(WAVE_NAME).asText();
+                }
             }
-        }
 
-        if (bootcampId == null) {
-            bootcampId = "No bootcamp";
-            bootcampName = "No bootcamp";
-        }
+            if (bootcampId == null) {
+                bootcampId = "No bootcamp";
+                bootcampName = "No bootcamp";
+            }
 
-        user.setBootcampId(bootcampId);
-        user.setBootcampName(bootcampName);
+            user.setBootcampId(bootcampId);
+            user.setBootcampName(bootcampName);
+        }
     }
 
     private void setXpHistory(User user) throws IOException {
         JsonNode xpHistoryInfo = sendRequest(RequestBody.getXpHistory(user));
-        JsonNode historyList = xpHistoryInfo.get(STUDENT).get(XP_HISTORY).get(HISTORY);
+        if (!xpHistoryInfo.isEmpty()) {
+            JsonNode historyList = xpHistoryInfo.get(STUDENT).get(XP_HISTORY).get(HISTORY);
 
-        ArrayNode historyData = MAPPER.createArrayNode();
-        for (JsonNode history : historyList) {
-            ObjectNode objectHistory = history.deepCopy();
-            objectHistory.remove(TYPENAME);
-            historyData.add(objectHistory);
+            ArrayNode historyData = MAPPER.createArrayNode();
+            for (JsonNode history : historyList) {
+                ObjectNode objectHistory = history.deepCopy();
+                objectHistory.remove(TYPENAME);
+                historyData.add(objectHistory);
+            }
+
+            user.setXpHistory(historyData.toString());
         }
-
-        user.setXpHistory(historyData.toString());
     }
 
     private void setProject(User user) throws IOException {
         JsonNode projectsInfo = sendRequest(RequestBody.getProjects(user));
-        JsonNode projectsList = projectsInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
+        if (!projectsInfo.isEmpty()) {
+            JsonNode projectsList = projectsInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
 
-        ArrayNode projectsData = MAPPER.createArrayNode();
-        for (JsonNode project : projectsList) {
-            ObjectNode projectObj = project.deepCopy();
-            if (!STATUS_UNAVAILABLE.equals(projectObj.get(GOAL_STATUS).asText())) {
-                projectObj.remove(TYPENAME);
-                projectsData.add(projectObj);
+            ArrayNode projectsData = MAPPER.createArrayNode();
+            for (JsonNode project : projectsList) {
+                ObjectNode projectObj = project.deepCopy();
+                if (!STATUS_UNAVAILABLE.equals(projectObj.get(GOAL_STATUS).asText())) {
+                    projectObj.remove(TYPENAME);
+                    projectsData.add(projectObj);
+                }
             }
-        }
 
-        user.setProjects(projectsData.toString());
+            user.setProjects(projectsData.toString());
+        }
     }
 
     private JsonNode sendRequest(String requestBody) throws IOException {
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
-        String responseStr = restTemplate.postForObject(URL, request, String.class);
+        String responseStr = "";
+        try {
+            responseStr = restTemplate.postForObject(URL, request, String.class);
+        } catch (RestClientException e) {
+            System.out.println("ERROR " + e.getMessage());
+        }
         return MAPPER.readTree(responseStr).get(DATA);
     }
 
     private void saveUser(User user) {
-        userRepo.save(user);
+        userRepository.save(user);
     }
 
     private void updateUser(User user) {
-        userRepo.save(user);
+        userRepository.save(user);
     }
 
     public String getUsersList() {

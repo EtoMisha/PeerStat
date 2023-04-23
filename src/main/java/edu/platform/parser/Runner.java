@@ -22,7 +22,7 @@ public class Runner {
 
     @EventListener(ApplicationReadyEvent.class)
     public void run() {
-        testInit();
+//        testInit();
 //        initUsers();
 //
 //        LocalTime runTime = LocalTime.parse(runTimeSetting);

@@ -48,7 +48,7 @@ public class UserObjectView {
         this.campus = campusNames.get(user.getSchoolId());
         this.coalition = user.getCoalitionName();
         this.wave = getWaveName(user);
-        this.bootcamp = user.getBootcampName().equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
+        this.bootcamp = user.getBootcampName();
         this.level = user.getLevel();
         this.xp = user.getXp();
         this.peerPoints = user.getPeerPoints();

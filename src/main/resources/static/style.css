@@ -131,12 +131,12 @@ h1 a {
 }
 
 .content_wrapper {
-
+    padding-bottom: 2em;
 }
 
 .content {
     margin-top: 3em;
-    margin-bottom: 1em;
+    margin-bottom: 2em;
 }
 
 table, th, td {
@@ -233,7 +233,7 @@ td:nth-of-type(13) {
 }
 
 form {}
-input[type=text], input[type=password], textarea {
+.map_form input[type=text], input[type=password], textarea {
     min-width: 500px;
     padding: 16px 8px;
     margin: 8px 0;
@@ -273,6 +273,16 @@ button:hover {
     padding: 16px 0;
     text-align:left;
 }
+
+.table-custom input[type=text], input[type=password], select, textarea {
+    width: 100%;
+    padding: 8px 8px;
+    /*margin: 8px 0;*/
+    display: inline-block;
+    border: none;
+    box-sizing: border-box;
+}
+
 /*!* Change styles for span on extra small screens *!*/
 /*@media screen and (max-width: 300px) {*/
 /*    span.psw {*/
