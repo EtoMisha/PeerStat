@@ -20,7 +20,6 @@
             </ul>
         </div>
 <!--        <div class="header-text">-->
-<!--            <h1><a href="index.html">Info 21 v2 by fbeatris</a></h1>-->
 <!--        </div>-->
     </div>
 
@@ -81,9 +80,12 @@
                     pagingDivSelector: "#pagination",
                 });
             </script>
+            <div class="lastUpdate">Данные на <span th:text="${@parser.getLastUpdateTime()}"></span></div>
         </div>
     </div>
-    <div class="copyright">&#169; <a href="https://t.me/eto_misha" target="_blank">fbeatris</a></div>
+    <div class="footer">
+        <div class="copyright">&#169; <a href="https://t.me/eto_misha" target="_blank">fbeatris</a></div>
+    </div>
 
 </div>
 

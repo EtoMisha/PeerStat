@@ -1,19 +1,12 @@
 package edu.platform.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.platform.View.UserObjectView;
-import edu.platform.models.ProjectStatus;
 import edu.platform.models.User;
-import edu.platform.repo.UserRepo;
+import edu.platform.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,17 +33,17 @@ public class UserService {
 
     private static final Map<String, String> campusNames = Map.of("6bfe3c56-0211-4fe1-9e59-51616caac4dd", "Москва");
 
-    private UserRepo userRepo;
+    private UserRepository userRepository;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
-    public void setFormatter(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    public void setFormatter(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public List<UserObjectView> getAllUsers() {
-        List<User> userList = userRepo.findByOrderByXpDesc();
+        List<User> userList = userRepository.findByOrderByXpDesc();
         return userList.stream().map(UserObjectView::new).toList();
 //        List<UserObjectView> result = new ArrayList<>();
 //        for (UserObjectView u : rawList) {

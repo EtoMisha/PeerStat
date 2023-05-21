@@ -3,7 +3,6 @@ package edu.platform.View;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.platform.models.ProjectStatus;
 import edu.platform.models.User;
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -38,6 +37,7 @@ public class UserObjectView {
     private static final String XP_VALUE = "expValue";
     private static final String NO_BOOTCAMP = "No bootcamp";
     private static final String WAVE_PREFIX = "O_msk_";
+    private static final String PROJECT_STATUS_IN_PROGRESS = "IN_PROGRESS";
 
     public UserObjectView() {
     }
@@ -66,7 +66,7 @@ public class UserObjectView {
             JsonNode projectListJson = mapper.readTree(projectsStr);
             for (JsonNode projectJson : projectListJson) {
                 String projectStatus = projectJson.get(GOAL_STATUS).asText();
-                if (ProjectStatus.IN_PROGRESS.toString().equals(projectStatus)) {
+                if (PROJECT_STATUS_IN_PROGRESS.equals(projectStatus)) {
                     currentProjectSb.append(projectJson.get(PROJECT_NAME).asText()).append(", ");
                 }
             }
