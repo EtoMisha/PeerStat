@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -34,7 +35,7 @@ public class Parser {
     @Value("${parser.schoolId}")
     private String schoolId;
 
-    private String lastUpdateTime = "";
+    private String lastUpdateTime = "2023-05-21-22-00-00";
 
     private UserRepository userRepository;
     private LoginService loginService;
@@ -63,6 +64,7 @@ public class Parser {
     }
 
     public void initUsers(){
+        login();
         System.out.println("[initUsers] headers " + headers);
         List<String> currentUsersList = userRepository.findAll().stream().map(User::getLogin).toList();
 
@@ -86,6 +88,7 @@ public class Parser {
     }
 
     public void testInit(){
+        login();
         System.out.println("[testInit] headers " + headers);
 
         String login = "fbeatris";
@@ -93,6 +96,7 @@ public class Parser {
     }
 
     public void updateUsers() {
+        login();
         System.out.println("[updateUsers] headers " + headers);
 
         List<User> usersList = userRepository.findAll();
@@ -299,7 +303,8 @@ public class Parser {
     }
 
     private void setLastUpdateTime() {
-        lastUpdateTime = LocalDateTime.now().toString();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        lastUpdateTime = LocalDateTime.now().format(formatter);
     }
 
 

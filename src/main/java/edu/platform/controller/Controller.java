@@ -26,6 +26,11 @@ public class Controller {
         return modelAndView;
     }
 
+    @RequestMapping("/test")
+    public String test () {
+        return "controller test ok";
+    }
+
 //
 //    @GetMapping("/getUserInfo/")
 //    public String getAllUsersInfo() {

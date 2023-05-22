@@ -27,34 +27,25 @@ public class Runner {
 
     @EventListener(ApplicationReadyEvent.class)
     public void run() {
-        parser.login();
-//        parser.testInit();
-//        parser.initUsers();
+
+        System.out.println("[PARSER] run mode " + mode);
+        if (TEST_MODE.equals(mode)) {
+            System.out.println("[PARSER] testInit");
+            parser.testInit();
+
+        } else if (INIT_MODE.equals(mode)) {
+            System.out.println("[PARSER] initUsers");
+            parser.initUsers();
+
+        } else if (UPDATE_MODE.equals(mode)) {
+            System.out.println("[PARSER] updateUsers");
+            parser.updateUsers();
+        }
 
         LocalTime runTime = LocalTime.parse(runTimeSetting);
-        System.out.println("[run] runTime " + runTime);
-
         long delay = ChronoUnit.MILLIS.between(LocalTime.now(), runTime);
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.schedule(parser::updateUsers, delay, TimeUnit.MILLISECONDS);
-//
-//        System.out.println("[PARSER] run mode " + mode);
-//        parser.login();
-//        if (TEST_MODE.equals(mode)) {
-//            System.out.println("[PARSER] testInit");
-//            parser.testInit();
-//
-//        } else if (INIT_MODE.equals(mode)) {
-//            System.out.println("[PARSER] initUsers");
-//            parser.initUsers();
-//
-//        } else if (UPDATE_MODE.equals(mode)) {
-//            System.out.println("[PARSER] updateUsers");
-//            parser.updateUsers();
-//        } else {
-//            System.out.println("[PARSER] testInit elseeee");
-//            parser.testInit();
-//        }
     }
 
     @Autowired

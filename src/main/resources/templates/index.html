@@ -41,8 +41,8 @@
                             <th>PRP</th>
                             <th>CRP</th>
                             <th>Coins</th>
-                            <th>Month XP</th>
-                            <th>3 Months XP</th>
+                            <th title="Прирост XP за последний месяц">Month XP</th>
+                            <th title="Прирост XP за последние 3 месяца">3 Months XP</th>
                             <th>Current project</th>
                         </tr>
                     </thead>
@@ -82,11 +82,10 @@
             </script>
             <div class="lastUpdate">Данные на <span th:text="${@parser.getLastUpdateTime()}"></span></div>
         </div>
+        <div class="footer">
+            <div class="copyright">&#169; <a href="https://t.me/eto_misha" target="_blank">fbeatris</a></div>
+        </div>
     </div>
-    <div class="footer">
-        <div class="copyright">&#169; <a href="https://t.me/eto_misha" target="_blank">fbeatris</a></div>
-    </div>
-
 </div>
 
 </body>
