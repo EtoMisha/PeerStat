@@ -6,6 +6,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.Executors;
@@ -26,7 +28,7 @@ public class Runner {
     private Parser parser;
 
     @EventListener(ApplicationReadyEvent.class)
-    public void run() {
+    public void runAtStart() {
 
         System.out.println("[PARSER] run mode " + mode);
         if (TEST_MODE.equals(mode)) {
@@ -42,10 +44,24 @@ public class Runner {
             parser.updateUsers();
         }
 
-        LocalTime runTime = LocalTime.parse(runTimeSetting);
-        long delay = ChronoUnit.MILLIS.between(LocalTime.now(), runTime);
+        scheduleRun();
+    }
+
+    private void scheduleRun() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.schedule(parser::updateUsers, delay, TimeUnit.MILLISECONDS);
+        LocalTime runTime = LocalTime.parse(runTimeSetting);
+        long delay = LocalDateTime.now().until(LocalDate.now() //.plusDays(1)
+                .atTime(runTime), ChronoUnit.MINUTES);
+        System.out.println("[PARSER] scheduleRun time " + runTime + " delay " + delay);
+
+        final Runnable scheduleRunner = this::scheduleUpdate;
+        scheduler.scheduleAtFixedRate(scheduleRunner, delay,
+                TimeUnit.DAYS.toMinutes(1), TimeUnit.MINUTES);
+    }
+
+    private void scheduleUpdate() {
+        System.out.println("[PARSER] scheduleUpdate " + LocalDateTime.now());
+        parser.updateUsers();
     }
 
     @Autowired

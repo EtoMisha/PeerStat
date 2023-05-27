@@ -35,6 +35,8 @@ public class LoginService {
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--remote-allow-origins=*");
         chromeOptions.addArguments("--headless");
+        chromeOptions.addArguments("--no-sandbox");
+        chromeOptions.addArguments("--disable-dev-shm-usage");
 
         WebDriver driver = new ChromeDriver(chromeOptions);
         driver.manage().window().maximize();

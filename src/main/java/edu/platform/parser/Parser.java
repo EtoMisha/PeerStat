@@ -35,7 +35,7 @@ public class Parser {
     @Value("${parser.schoolId}")
     private String schoolId;
 
-    private String lastUpdateTime = "2023-05-21-22-00-00";
+    private String lastUpdateTime = "";
 
     private UserRepository userRepository;
     private LoginService loginService;
@@ -61,6 +61,8 @@ public class Parser {
         headers.add("schoolId", schoolId);
         headers.add("authority", AUTHORITY);
         headers.setContentType(MediaType.APPLICATION_JSON);
+
+        System.out.println("[parser login] ok");
     }
 
     public void initUsers(){
