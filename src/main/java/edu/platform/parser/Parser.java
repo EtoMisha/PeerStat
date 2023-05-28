@@ -13,14 +13,18 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DefaultPropertiesPersister;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Predicate;
 
 import static edu.platform.parser.GraphQLConstants.*;
@@ -31,11 +35,11 @@ public class Parser {
     private static final String URL = "https://edu.21-school.ru/services/graphql";
     private static final String AUTHORITY = "edu.21-school.ru";
     private static final int SEARCH_LIMIT = 25;
+    private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
+    private static final String LAST_UPDATE_TIME = "task-update.time";
 
     @Value("${parser.schoolId}")
     private String schoolId;
-
-    private String lastUpdateTime = "";
 
     private UserRepository userRepository;
     private LoginService loginService;
@@ -301,12 +305,36 @@ public class Parser {
     }
 
     public String getLastUpdateTime() {
+        String lastUpdateTime = "";
+
+        try {
+            Properties props = new Properties();
+            DefaultPropertiesPersister p = new DefaultPropertiesPersister();
+            p.load(props, new FileInputStream(LAST_UPDATE_PROPERTIES_FILE));
+
+            lastUpdateTime = props.getProperty(LAST_UPDATE_TIME);
+
+        } catch (IOException e) {
+            System.out.println("[PARSER] ERROR " + e.getMessage());
+        }
+
         return lastUpdateTime;
     }
 
-    private void setLastUpdateTime() {
+    public void setLastUpdateTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-        lastUpdateTime = LocalDateTime.now().format(formatter);
+        String lastUpdateTime = LocalDateTime.now().format(formatter);
+
+        try {
+            Properties props = new Properties();
+            props.setProperty(LAST_UPDATE_TIME, lastUpdateTime);
+
+            DefaultPropertiesPersister p = new DefaultPropertiesPersister();
+            p.store(props, new FileOutputStream(LAST_UPDATE_PROPERTIES_FILE), "parser last update time");
+
+        } catch (Exception e ) {
+            System.out.println("[PARSER] ERROR " + e.getMessage());
+        }
     }
 
 
