@@ -122,7 +122,7 @@ h1 a {
 
 
 .wrapper {
-    width: 90%;
+    width: 95%;
     display: flex;
     flex-direction: column;
     background-repeat: no-repeat;
@@ -150,6 +150,7 @@ table {
     border-collapse: collapse;
     table-layout: fixed;
     margin-bottom: 20px;
+    font-size: smaller;
 }
 
 th {
@@ -199,7 +200,7 @@ td:nth-of-type(7) {
 }
 th:nth-of-type(8),
 td:nth-of-type(8) {
-    width:5%;
+    width:7%;
 }
 th:nth-of-type(9),
 td:nth-of-type(9) {
@@ -227,12 +228,19 @@ td:nth-of-type(13) {
     white-space: normal;
 }
 
-.copyright {
-    /*position: absolute;*/
-    /*right: 50px;*/
-    /*bottom: 50px;*/
+.footer {
     font-size: small;
+    margin-top: 70px;
+    margin-bottom: 30px;
+}
+
+.copyright {
     text-align: right;
+}
+
+.donate {
+    /*width: 40%;*/
+    float: left;
 }
 
 .map_text {
@@ -309,6 +317,15 @@ button:hover {
     text-align: right;
 }
 
+#tableDiv {
+    display: none;
+}
+
+#preloader {
+    padding-top: 10%;
+    padding-bottom: 25%;
+    text-align: center;
+}
 
 /*!* Change styles for span on extra small screens *!*/
 /*@media screen and (max-width: 300px) {*/

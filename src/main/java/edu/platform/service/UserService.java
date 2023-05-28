@@ -44,14 +44,10 @@ public class UserService {
 
     public List<UserObjectView> getAllUsers() {
         List<User> userList = userRepository.findByOrderByXpDesc();
-        return userList.stream().map(UserObjectView::new).toList();
-//        List<UserObjectView> result = new ArrayList<>();
-//        for (UserObjectView u : rawList) {
-//            if (!u.getBootcamp().equals("No bootcamp")) {
-//                result.add(u);
-//            }
-//        }
-//        return result;
+        return userList.stream()
+                .filter(User::isActive)
+                .map(UserObjectView::new)
+                .toList();
     }
 
 //
