@@ -35,13 +35,14 @@
                             <th>Campus</th>
                             <th>Coalition</th>
                             <th>Wave</th>
+                            <th>Class</th>
                             <th>Bootcamp</th>
                             <th>Level</th>
                             <th>XP</th>
                             <th>PRP</th>
                             <th>CRP</th>
                             <th>Coins</th>
-                            <th title="Прирост XP за последний месяц">Month XP</th>
+<!--                            <th title="Прирост XP за последний месяц">Month XP</th>-->
                             <th title="Прирост XP за последние 3 месяца">3 Months XP</th>
                             <th>Current project</th>
                         </tr>
@@ -57,13 +58,14 @@
                             <td th:text="${user.campus}"></td>
                             <td th:text="${user.coalition}"></td>
                             <td th:text="${user.wave}"></td>
+                            <td th:text="${user.platformClass}"></td>
                             <td th:text="${user.bootcamp}"></td>
                             <td th:text="${user.level}"></td>
                             <td th:text="${user.xp}"></td>
                             <td th:text="${user.peerPoints}"></td>
                             <td th:text="${user.codeReviewPoints}"></td>
                             <td th:text="${user.coins}"></td>
-                            <td th:text="${user.diff}"></td>
+<!--                            <td th:text="${user.diff}"></td>-->
                             <td th:text="${user.diff3}"></td>
                             <td th:text="${user.currentProject}"></td>
                         </tr>
@@ -76,7 +78,7 @@
                 new DataTable(document.querySelector('.table'), {
                     pageSize: 20,
                     sort: [true, true, true, true, true, true, true, true, true, true, true, true, true],
-                    filters: [true, 'select', 'select', 'select', 'select', 'select', false, false, false, false, false, false, true],
+                    filters: [true, 'select', 'select', 'select', 'select', 'select', 'select', false, false, false, false, false, true],
                     pagingDivSelector: "#pagination",
                 });
             </script>

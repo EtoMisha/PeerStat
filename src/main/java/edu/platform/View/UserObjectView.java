@@ -18,6 +18,7 @@ public class UserObjectView {
     private String campus;
     private String coalition;
     private String wave;
+    private String platformClass;
     private String bootcamp;
     private int level;
     private int xp;
@@ -37,7 +38,9 @@ public class UserObjectView {
     private static final String XP_VALUE = "expValue";
     private static final String NO_BOOTCAMP = "No bootcamp";
     private static final String WAVE_PREFIX = "O_msk_";
+    private static final String WAVE_INTRA = "Intra";
     private static final String PROJECT_STATUS_IN_PROGRESS = "IN_PROGRESS";
+    private static final String WAVE_UNKNOWN = "???";
 
     public UserObjectView() {
     }
@@ -47,8 +50,9 @@ public class UserObjectView {
         this.email = user.getEmail();
         this.campus = campusNames.get(user.getSchoolId());
         this.coalition = user.getCoalitionName();
-        this.wave = getWaveName(user);
-        this.bootcamp = user.getBootcampName().equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
+        this.wave = getRealWave(user);
+        this.platformClass = user.getWaveName();
+        this.bootcamp = user.getBootcampName();//.equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
         this.level = user.getLevel();
         this.xp = user.getXp();
         this.peerPoints = user.getPeerPoints();
@@ -97,11 +101,18 @@ public class UserObjectView {
         return diff;
     }
 
-    private String getWaveName(User user) {
-        String waveName = user.getWaveName();
-        if (waveName.contains(WAVE_PREFIX) && waveName.length() < 14) {
+    private String getRealWave(User user) {
+        String platformClass = user.getWaveName();
 
+        if (platformClass.startsWith(WAVE_PREFIX) && platformClass.length() == 13) {
+            platformClass = platformClass.substring(
+                    WAVE_PREFIX.length(),
+                    platformClass.indexOf("_", WAVE_PREFIX.length()));
+        } else if (platformClass.startsWith(WAVE_PREFIX)){
+            platformClass = WAVE_INTRA;
+        } else {
+            platformClass = WAVE_UNKNOWN;
         }
-        return waveName;
+        return platformClass;
     }
 }
