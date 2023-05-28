@@ -22,7 +22,7 @@ public class Controller {
         this.telegramService = telegramService;
     }
 
-    @RequestMapping("/")
+    @GetMapping("/")
     public ModelAndView index () {
         ModelAndView modelAndView = new ModelAndView("index");
         modelAndView.addObject("users", userService.getAllUsers());
@@ -31,13 +31,12 @@ public class Controller {
 
     @PostMapping("/mapForm")
     public String acceptMapForm(@RequestBody String request) {
-        telegramService.sendToAdmin(request);
-        return "Ок, записал, спасибо, попозже внесу на карту";
+        return telegramService.sendFormDataToAdmin(request);
     }
 
     @RequestMapping("/test")
     public String test () {
-        telegramService.sendToAdmin("test");
+        telegramService.sendFormDataToAdmin("test");
         return "controller test ok";
     }
 

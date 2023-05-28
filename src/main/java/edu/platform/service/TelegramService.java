@@ -18,6 +18,7 @@ public class TelegramService {
     private static final String TG_METHOD_SEND_MESSAGE = "/sendMessage";
     private static final String TG_CHAT_ID = "chat_id";
     private static final String TG_TEXT = "text";
+    private static final String FORM_RESPONSE = "Ок, записал, спасибо, попозже внесу на карту";
 
     @Value("${bot.adminId}")
     private long botAdminId;
@@ -25,12 +26,14 @@ public class TelegramService {
     @Value("${bot.token}")
     private String botToken;
 
-    public void sendToAdmin(String input) {
+    public String sendFormDataToAdmin(String input) {
         String message = URLDecoder
                 .decode(input, StandardCharsets.UTF_8)
                 .replaceAll("&", "\n");
 
         sendMessageToBot(botAdminId, message);
+
+        return FORM_RESPONSE;
     }
 
     private void sendMessageToBot(long chatId, String message) {
