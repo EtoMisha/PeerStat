@@ -1,22 +1,25 @@
 package edu.platform.controller;
 
+import edu.platform.service.TelegramService;
 import edu.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 public class Controller {
 
     private UserService userService;
+    private TelegramService telegramService;
 
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    @Autowired
+    public void setTelegramService(TelegramService telegramService) {
+        this.telegramService = telegramService;
     }
 
     @RequestMapping("/")
@@ -26,8 +29,15 @@ public class Controller {
         return modelAndView;
     }
 
+    @PostMapping("/mapForm")
+    public String acceptMapForm(@RequestBody String request) {
+        telegramService.sendToAdmin(request);
+        return "Ок, записал, спасибо, попозже внесу на карту";
+    }
+
     @RequestMapping("/test")
     public String test () {
+        telegramService.sendToAdmin("test");
         return "controller test ok";
     }
 
