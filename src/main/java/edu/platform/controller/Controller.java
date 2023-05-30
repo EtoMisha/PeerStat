@@ -22,9 +22,9 @@ public class Controller {
         this.telegramService = telegramService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/stat")
     public ModelAndView index () {
-        ModelAndView modelAndView = new ModelAndView("index");
+        ModelAndView modelAndView = new ModelAndView("stat");
         modelAndView.addObject("users", userService.getAllUsers());
         return modelAndView;
     }

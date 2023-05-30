@@ -50,7 +50,7 @@ public class Runner {
     private void scheduleRun() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         LocalTime runTime = LocalTime.parse(runTimeSetting);
-        long delay = LocalDateTime.now().until(LocalDate.now() //.plusDays(1)
+        long delay = LocalDateTime.now().until(LocalDate.now().plusDays(1)
                 .atTime(runTime), ChronoUnit.MINUTES);
         System.out.println("[PARSER] scheduleRun time " + runTime + " delay " + delay);
 
@@ -62,6 +62,12 @@ public class Runner {
     private void scheduleUpdate() {
         System.out.println("[PARSER] scheduleUpdate " + LocalDateTime.now());
         parser.updateUsers();
+    }
+
+    private void scheduleTest() {
+        parser.testInit();
+        parser.setLastUpdateTime();
+        System.out.println("SHEDULE TEST OK " + LocalDateTime.now());
     }
 
     @Autowired
