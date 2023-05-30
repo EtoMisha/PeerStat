@@ -18,7 +18,8 @@ body {
     margin: 0;
     padding-top: 2em;
     width: 100%;
-    background-image: linear-gradient(236deg, #74ebd5, #acb6e5);
+    /*background-image: linear-gradient(236deg, #74ebd5, #acb6e5);*/
+    background-color: #EEEEEE;
     height: 100%;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -117,7 +118,6 @@ h1 a {
 
 .menu a {
     text-decoration: underline;
-    color: white;
 }
 
 
@@ -142,15 +142,17 @@ h1 a {
 }
 
 table, th, td {
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid #BBB;
 }
 
 table {
-    width: 100%;
+    /*width: 100%;*/
+    min-width: 1100px;
     border-collapse: collapse;
     table-layout: fixed;
     margin-bottom: 20px;
     font-size: smaller;
+
 }
 
 th {
@@ -158,15 +160,15 @@ th {
     padding: 10px;
 }
 
-tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.3);
+tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.4);
 }
 
 td {
     padding: 10px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /*overflow: hidden;*/
+    /*text-overflow: ellipsis;*/
+    /*white-space: nowrap;*/
 }
 
 th:nth-of-type(1),
@@ -232,6 +234,11 @@ td:nth-of-type(13) {
     font-size: small;
     margin-top: 70px;
     margin-bottom: 30px;
+    color: grey;
+}
+
+.footer a {
+    color: grey;
 }
 
 .copyright {
@@ -268,6 +275,7 @@ button {
     margin: 10px 0;
     border: none;
     min-width: 500px;
+    background-color: #BBBBBB;
 }
 
 button:hover {
@@ -297,6 +305,7 @@ button:hover {
     display: inline-block;
     border: none;
     box-sizing: border-box;
+    background-color: white;
 }
 
 /*!* Change styles for span on extra small screens *!*/
@@ -319,6 +328,10 @@ button:hover {
 
 #tableDiv {
     display: none;
+}
+
+.table-wrapper {
+    overflow-x: scroll;
 }
 
 #preloader {
