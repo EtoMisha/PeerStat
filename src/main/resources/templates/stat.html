@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="data-table-lib/css/datatable.css" />
-    <title>21 world - peer statistic</title>
+    <title>21 world - статистика пиров платформы</title>
 </head>
 <body>
 <div class="wrapper">
@@ -29,20 +29,19 @@
                     <table class="table table-custom">
                         <thead>
                         <tr>
-                            <th>Login</th>
-                            <th>Campus</th>
-                            <th>Coalition</th>
-                            <th>Wave</th>
-                            <th>Class</th>
-                            <th>Bootcamp</th>
-                            <th>Level</th>
+                            <th>Логин</th>
+                            <th>Кампус</th>
+                            <th>Коалиция</th>
+                            <th>Волна</th>
+                            <th>Класс</th>
+                            <th>Бассейн</th>
+                            <th>Уровень</th>
                             <th>XP</th>
                             <th>PRP</th>
                             <th>CRP</th>
                             <th>Coins</th>
-                            <!--                            <th title="Прирост XP за последний месяц">Month XP</th>-->
-                            <th title="Прирост XP за последние 3 месяца">3 Months XP</th>
-                            <th>Current project</th>
+                            <th title="Прирост XP за последние 3 месяца">XP за 3 мес</th>
+                            <th>Текущие проекты</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -63,7 +62,6 @@
                             <td th:text="${user.peerPoints}"></td>
                             <td th:text="${user.codeReviewPoints}"></td>
                             <td th:text="${user.coins}"></td>
-                            <!--                            <td th:text="${user.diff}"></td>-->
                             <td th:text="${user.diff3}"></td>
                             <td th:text="${user.currentProject}"></td>
                         </tr>
