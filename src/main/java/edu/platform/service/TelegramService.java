@@ -20,7 +20,7 @@ public class TelegramService {
     private static final String TG_TEXT = "text";
     private static final String FORM_RESPONSE = "Ок, записал, спасибо, попозже внесу на карту";
 
-    @Value("${bot.adminId}")
+    @Value("${bot.admin-id}")
     private long botAdminId;
 
     @Value("${bot.token}")

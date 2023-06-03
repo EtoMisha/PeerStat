@@ -45,7 +45,7 @@ public class UserService {
     public List<UserObjectView> getAllUsers() {
         List<User> userList = userRepository.findByOrderByXpDesc();
         return userList.stream()
-                .filter(User::isActive)
+//                .filter(User::isActive)
                 .map(UserObjectView::new)
                 .toList();
     }

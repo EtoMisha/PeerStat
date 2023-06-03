@@ -29,7 +29,10 @@ public class UserObjectView {
     private int diff3;
     private String currentProject;
 
-    private static final Map<String, String> campusNames = Map.of("6bfe3c56-0211-4fe1-9e59-51616caac4dd", "Москва");
+    private static final Map<String, String> campusNames = Map.of(
+            "6bfe3c56-0211-4fe1-9e59-51616caac4dd", "Москва",
+            "kzn", "Казань",
+            "nsk", "Новосибирск");
     private final ObjectMapper mapper = new ObjectMapper();
 
     private static final String GOAL_STATUS = "goalStatus";
@@ -46,7 +49,9 @@ public class UserObjectView {
     }
 
     public UserObjectView(User user) {
-        this.login = user.getLogin();
+        this.login = user.getLogin() + (user.isGraduate()
+                ? " (alumni)"
+                : (user.isActive() ? "" : " (deactivated)"));
         this.email = user.getEmail();
         this.campus = campusNames.get(user.getSchoolId());
         this.coalition = user.getCoalitionName();

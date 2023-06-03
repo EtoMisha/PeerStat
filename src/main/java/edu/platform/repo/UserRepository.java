@@ -11,6 +11,8 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     User findUserByLogin(String login);
 
+    List<User> findUsersBySchoolId(String schoolId);
+
     List<User> findAll();
 
     List<User> findByOrderByXpDesc();

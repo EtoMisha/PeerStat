@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.platform.models.Campus;
 import edu.platform.models.User;
 import edu.platform.repo.UserRepository;
 import edu.platform.service.LoginService;
@@ -38,8 +39,8 @@ public class Parser {
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
     private static final String LAST_UPDATE_TIME = "task-update.time";
 
-    @Value("${parser.schoolId}")
-    private String schoolId;
+//    @Value("${parser.schoolId}")
+//    private String schoolId;
 
     private UserRepository userRepository;
     private LoginService loginService;
@@ -58,21 +59,23 @@ public class Parser {
         this.loginService = loginService;
     }
 
-    public void login() {
+    public void login(Campus campus) {
         System.out.println("[parser login] start login ");
-        String cookie = loginService.getCookies();
+        String cookie = loginService.getCookies(campus.getLogin(), campus.getPassword());
         headers.add("Cookie", cookie);
-        headers.add("schoolId", schoolId);
+        headers.add("schoolId", campus.getSchoolId());
         headers.add("authority", AUTHORITY);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         System.out.println("[parser login] ok");
     }
 
-    public void initUsers(){
-        login();
+    public void initUsers(Campus campus){
+        System.out.println("[PARSER] initUsers by login " + campus.getLogin());
+        login(campus);
         System.out.println("[initUsers] headers " + headers);
-        List<String> currentUsersList = userRepository.findAll().stream().map(User::getLogin).toList();
+        List<String> currentUsersList = userRepository.findUsersBySchoolId(campus.getSchoolId()).stream()
+                .map(User::getLogin).toList();
 
         int offset = 0;
         try {
@@ -93,19 +96,21 @@ public class Parser {
         }
     }
 
-    public void testInit(){
-        login();
+    public void testInit(Campus campus){
+        System.out.println("[PARSER] testInit by login " + campus.getLogin());
+        login(campus);
         System.out.println("[testInit] headers " + headers);
 
-        String login = "fbeatris";
+        String login = campus.getLogin().substring(0, campus.getLogin().indexOf("@student"));
         parseUser(login);
     }
 
-    public void updateUsers() {
-        login();
+    public void updateUsers(Campus campus) {
+        System.out.println("[PARSER] updateUsers by login " + campus.getLogin());
+        login(campus);
         System.out.println("[updateUsers] headers " + headers);
 
-        List<User> usersList = userRepository.findAll();
+        List<User> usersList = userRepository.findUsersBySchoolId(campus.getSchoolId());
         for (User user : usersList) {
             try {
                 setCredentials(user);

@@ -18,17 +18,11 @@ public class LoginService {
     private static final String PASSWORD_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[2]/div/input";
     private static final String BUTTON_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[3]/button";
 
-    @Value("${parser.login}")
-    private String login;
-
-    @Value("${parser.password}")
-    private String password;
-
-    @Value("${parser.chromeDriverPath}")
+    @Value("${parser.chrome-driver-path}")
     private String chromeDriverPath;
 
-    public String getCookies() {
-        System.out.println("[getCookies] start login " + login + " pass " + password);
+    public String getCookies(String login, String password) {
+        System.out.println("[getCookies] start login " + login);
 
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 
