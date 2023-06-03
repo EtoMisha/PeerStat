@@ -1453,6 +1453,15 @@ DataTable.prototype = {
                                                                            index, data));
         }
         this.options.afterRefresh.call(this.table);
+
+        // custom rows numeration
+        let currentPage = this.filterIndex.length ?
+            parseInt(this.currentStart / this.options.pageSize, 10) : 0;
+        let beginNumber = currentPage * this.options.pageSize;
+        const numCellsList = document.getElementsByClassName("row-number");
+        for (let i = 0; i < numCellsList.length; i++) {
+            numCellsList[i].innerHTML = (beginNumber + i + 1).toString();
+        }
     },
 
     /**
