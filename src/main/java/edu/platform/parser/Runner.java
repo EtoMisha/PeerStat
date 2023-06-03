@@ -24,6 +24,8 @@ public class Runner {
     private String mode;
     @Value("${parser.runtime}")
     private String runTimeSetting;
+    @Value("${parser.plusDays}")
+    private String plusDays;
 
     private Parser parser;
 
@@ -50,7 +52,8 @@ public class Runner {
     private void scheduleRun() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         LocalTime runTime = LocalTime.parse(runTimeSetting);
-        long delay = LocalDateTime.now().until(LocalDate.now().plusDays(1)
+        long delay = LocalDateTime.now().until(LocalDate.now()
+                .plusDays(Integer.parseInt(plusDays))
                 .atTime(runTime), ChronoUnit.MINUTES);
         System.out.println("[PARSER] scheduleRun time " + runTime + " delay " + delay);
 
