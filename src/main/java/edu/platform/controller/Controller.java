@@ -23,10 +23,22 @@ public class Controller {
     }
 
     @GetMapping("/stat")
-    public ModelAndView index () {
+    public ModelAndView getStatPage () {
         ModelAndView modelAndView = new ModelAndView("stat");
         modelAndView.addObject("users", userService.getAllUsers());
         return modelAndView;
+    }
+
+    @GetMapping("/stat-test")
+    public ModelAndView getStatPageTest () {
+        ModelAndView modelAndView = new ModelAndView("stat-test");
+        modelAndView.addObject("users", userService.getAllUsers());
+        return modelAndView;
+    }
+
+    @GetMapping("/projects")
+    public ModelAndView getProjectsPage () {
+        return new ModelAndView("projects");
     }
 
     @PostMapping("/mapForm")

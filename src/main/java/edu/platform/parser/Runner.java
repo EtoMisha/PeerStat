@@ -42,27 +42,32 @@ public class Runner {
     public void runAtStart() {
         System.out.println("[Runner] run mode " + mode);
 
-        Properties props = new Properties();
         try {
+            Properties props = new Properties();
             props.load(new FileInputStream(CUSTOM_PROPERTIES));
 
-            campusList.add(new Campus("msk", props));
-            campusList.add(new Campus("kzn", props));
-            campusList.add(new Campus("nsk", props));
+            Campus msk = new Campus("msk", props);
+//            Campus kzn = new Campus("nsk", props);
+            Campus nsk = new Campus("nsk", props);
+
+            campusList.add(msk);
+//            campusList.add(kzn);
+            campusList.add(nsk);
+
+            if (TEST_MODE.equals(mode)) {
+                campusList.forEach(parser::testInit);
+            } else if (INIT_MODE.equals(mode)) {
+                parser.initUsers(nsk);
+//                campusList.forEach(parser::initUsers);
+            } else if (UPDATE_MODE.equals(mode)) {
+                campusList.forEach(parser::updateUsers);
+            }
+
+            scheduleRun();
 
         } catch (IOException e) {
             System.out.println("[Runner] ERROR " + e.getMessage());
         }
-
-        if (TEST_MODE.equals(mode)) {
-            campusList.forEach(parser::testInit);
-        } else if (INIT_MODE.equals(mode)) {
-            campusList.forEach(parser::initUsers);
-        } else if (UPDATE_MODE.equals(mode)) {
-            campusList.forEach(parser::updateUsers);
-        }
-
-        scheduleRun();
     }
 
     private void scheduleRun() {
