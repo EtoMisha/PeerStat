@@ -1,0 +1,66 @@
+
+@media screen and (max-width : 320px)
+{
+    html
+    {
+        font-size: 100%;;
+    }
+}
+@media screen and (max-width : 1024px)
+{
+    html {
+        font-size: 200%;;
+    }
+
+    .logo img {
+        width: 290px!important;
+        height: 67px!important;
+    }
+
+    .menu {
+        font-size: 100%!important;
+        margin-top: 15px;
+    }
+
+    .menu li {
+        padding-top: 15px;
+        display: block;
+    }
+
+    .form-block {
+    }
+
+    .form-block label {
+        display: block;
+    }
+    .form-block label input {
+        display: table-cell; vertical-align: middle;
+    }
+
+    .map_form input[type="text"] {
+        width:100%;
+    }
+
+    .form-block input[type="radio"] {
+        width:25px;
+        height:25px;
+    }
+
+    button {
+        min-width: 550px!important;
+        font-size: 70%;
+    }
+
+    /*.content {*/
+    /*    width: 95%*/
+    /*}*/
+
+    .table-projects {
+        font-size: smaller;
+        width:100%!important;
+    }
+
+    .intro-text {
+        width: 100%!important;
+    }
+}

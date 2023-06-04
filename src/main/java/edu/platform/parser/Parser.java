@@ -4,73 +4,130 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.platform.models.RequestBody;
+import edu.platform.models.Campus;
 import edu.platform.models.User;
 import edu.platform.repo.UserRepository;
+import edu.platform.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DefaultPropertiesPersister;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Properties;
+import java.util.function.Predicate;
 
 import static edu.platform.parser.GraphQLConstants.*;
 
 @Component
 public class Parser {
 
+    private static final String URL = "https://edu.21-school.ru/services/graphql";
+    private static final String AUTHORITY = "edu.21-school.ru";
+    private static final int SEARCH_LIMIT = 25;
+    private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
+    private static final String LAST_UPDATE_TIME = "task-update.time";
+
+//    @Value("${parser.schoolId}")
+//    private String schoolId;
+
     private UserRepository userRepository;
-
-    @Value("${parser.usersList}")
-    private String usersList;
-
-    @Value("${parser.schoolId}")
-    private String schoolId;
-
-    @Value("${parser.cookie}")
-    private String cookie;
+    private LoginService loginService;
 
     private final HttpHeaders headers = new HttpHeaders();
     private final ObjectMapper MAPPER = new ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private static final String URL = "https://edu.21-school.ru/services/graphql";
-
-    public Parser() {}
-
     @Autowired
-    public void setRepo(UserRepository userRepository) {
+    public void setRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    private void initHeaders() {
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Cookie", cookie);
-        headers.add("schoolId", schoolId);
-        headers.add("authority", "edu.21-school.ru");
+    @Autowired
+    public void setLoginService(LoginService loginService) {
+        this.loginService = loginService;
     }
 
-    public void initUsers(){
-        initHeaders();
-        System.out.println("[initUsers] headers " + headers);
+    public void login(Campus campus) {
+        System.out.println("[parser login] start login ");
+        String cookie = loginService.getCookies(campus.getLogin(), campus.getPassword());
+        headers.add("Cookie", cookie);
+        headers.add("schoolId", campus.getSchoolId());
+        headers.add("authority", AUTHORITY);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Scanner scanner;
+        System.out.println("[parser login] ok");
+    }
+
+    public void initUsers(Campus campus){
+        System.out.println("[PARSER] initUsers by login " + campus.getLogin());
+        login(campus);
+        System.out.println("[initUsers] headers " + headers);
+        List<String> currentUsersList = userRepository.findUsersBySchoolId(campus.getSchoolId()).stream()
+                .map(User::getLogin).toList();
+
+        int offset = 0;
         try {
-            scanner = new Scanner(new File(usersList));
-            while (scanner.hasNext()) {
-                String login = scanner.nextLine();
-                parseUser(login);
+            List<String> tempLoginsList = getSearchResults(offset);
+            while (!tempLoginsList.isEmpty()) {
+                tempLoginsList.stream()
+                        .filter(Predicate.not(currentUsersList::contains))
+                        .forEach(this::parseUser);
+
+                offset += SEARCH_LIMIT;
+                tempLoginsList = getSearchResults(offset);
             }
 
-        } catch (FileNotFoundException e) {
-            System.out.println("[initUsers] ERROR " + e.getMessage());
+            setLastUpdateTime();
+
+        } catch (IOException e) {
+            System.out.println("[initUsers] ERROR offset " + offset + " " + e.getMessage());
         }
+    }
+
+    public void testInit(Campus campus){
+        System.out.println("[PARSER] testInit by login " + campus.getLogin());
+        login(campus);
+        System.out.println("[testInit] headers " + headers);
+
+        String login = campus.getLogin().substring(0, campus.getLogin().indexOf("@student"));
+        parseUser(login);
+    }
+
+    public void updateUsers(Campus campus) {
+        System.out.println("[PARSER] updateUsers by login " + campus.getLogin());
+        login(campus);
+        System.out.println("[updateUsers] headers " + headers);
+
+        List<User> usersList = userRepository.findUsersBySchoolId(campus.getSchoolId());
+        for (User user : usersList) {
+            try {
+                setCredentials(user);
+                setPersonalInfo(user);
+                setXpHistory(user);
+                setProject(user);
+
+                updateUser(user);
+                System.out.println("[updateUsers] user " + user.getLogin() + " ok");
+
+            } catch (Exception e) {
+                System.out.println("[updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
+            }
+        }
+
+        System.out.println("[updateUsers] done");
+        setLastUpdateTime();
     }
 
     private void parseUser(String login) {
@@ -90,32 +147,6 @@ public class Parser {
             }
         } catch (Exception e) {
             System.out.println("[parseUser] ERROR " + login + " " + e.getMessage());
-        }
-    }
-
-    public void testInit(){
-        initHeaders();
-        System.out.println("[testInit] headers " + headers);
-
-        String login = "fbeatris";
-        parseUser(login);
-    }
-
-    public void updateUsers() {
-        List<User> usersList = userRepository.findAll();
-        for (User user : usersList) {
-            try {
-                setCredentials(user);
-                setPersonalInfo(user);
-                setXpHistory(user);
-                setProject(user);
-
-                updateUser(user);
-                System.out.println("[updateUsers] user " + user.getLogin() + " ok");
-
-            } catch (Exception e) {
-                System.out.println("[updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
-            }
         }
     }
 
@@ -178,10 +209,7 @@ public class Parser {
         if (!coalitionInfo.isEmpty()) {
             String coalitionName = null;
             if (coalitionInfo.get(STUDENT) != null
-//                    && coalitionInfo.get(STUDENT).get(TOURNAMENT) != null
-//                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER) != null
-//                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION) != null
-                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME) != null){
+                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME) != null) {
                 coalitionName = coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME).asText();
             }
             user.setCoalitionName((coalitionName != null && !coalitionName.isEmpty()) ? coalitionName : "No Coalition");
@@ -248,6 +276,21 @@ public class Parser {
         }
     }
 
+    private List<String> getSearchResults(int offset) throws IOException {
+        List<String> loginList = new ArrayList<>();
+        JsonNode searchInfo = sendRequest(RequestBody.getSearchResults(SEARCH_LIMIT, offset));
+        if (!searchInfo.isEmpty()) {
+            JsonNode profiles = searchInfo.get(SCHOOL_21).get(SEARCH_BY_TEXT).get(PROFILES).get(PROFILES);
+            for (JsonNode profile : profiles) {
+                String fullLogin = profile.get(LOGIN).asText();
+                String login = fullLogin.contains("@") ? fullLogin.substring(0, fullLogin.indexOf("@")) : fullLogin;
+                loginList.add(login);
+            }
+        }
+        System.out.println("[getSearchResults] ok, logins: " + loginList);
+        return loginList;
+    }
+
     private JsonNode sendRequest(String requestBody) throws IOException {
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
         String responseStr = "";
@@ -267,16 +310,37 @@ public class Parser {
         userRepository.save(user);
     }
 
-    public String getUsersList() {
-        return usersList;
+    public String getLastUpdateTime() {
+        String lastUpdateTime = "";
+
+        try {
+            Properties props = new Properties();
+            DefaultPropertiesPersister p = new DefaultPropertiesPersister();
+            p.load(props, new FileInputStream(LAST_UPDATE_PROPERTIES_FILE));
+
+            lastUpdateTime = props.getProperty(LAST_UPDATE_TIME);
+
+        } catch (IOException e) {
+            System.out.println("[PARSER] ERROR " + e.getMessage());
+        }
+
+        return lastUpdateTime;
     }
 
-    public String getSchoolId() {
-        return schoolId;
-    }
+    public void setLastUpdateTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        String lastUpdateTime = LocalDateTime.now().format(formatter);
 
-    public String getCookie() {
-        return cookie;
+        try {
+            Properties props = new Properties();
+            props.setProperty(LAST_UPDATE_TIME, lastUpdateTime);
+
+            DefaultPropertiesPersister p = new DefaultPropertiesPersister();
+            p.store(props, new FileOutputStream(LAST_UPDATE_PROPERTIES_FILE), "parser last update time");
+
+        } catch (Exception e ) {
+            System.out.println("[PARSER] ERROR " + e.getMessage());
+        }
     }
 
 

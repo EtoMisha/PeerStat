@@ -44,4 +44,7 @@ public interface GraphQLConstants {
     String GOAL_STATUS = "goalStatus";
     String STATUS_UNAVAILABLE = "UNAVAILABLE";
     String CORE_PROGRAM = "Core program";
+    String SEARCH_BY_TEXT = "searchByText";
+    String PROFILES = "profiles";
+    String LOGIN = "login";
 }

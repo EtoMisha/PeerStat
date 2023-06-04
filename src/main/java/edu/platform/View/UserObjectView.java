@@ -3,7 +3,6 @@ package edu.platform.View;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.platform.models.ProjectStatus;
 import edu.platform.models.User;
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -19,6 +18,7 @@ public class UserObjectView {
     private String campus;
     private String coalition;
     private String wave;
+    private String platformClass;
     private String bootcamp;
     private int level;
     private int xp;
@@ -29,7 +29,18 @@ public class UserObjectView {
     private int diff3;
     private String currentProject;
 
-    private static final Map<String, String> campusNames = Map.of("6bfe3c56-0211-4fe1-9e59-51616caac4dd", "Москва");
+    private static final String SCHOOL_ID_MSK = "6bfe3c56-0211-4fe1-9e59-51616caac4dd";
+    private static final String SCHOOL_ID_KZN = "kzn";
+    private static final String SCHOOL_ID_NSK = "46e7d965-21e9-4936-bea9-f5ea0d1fddf2";
+
+    private static final Map<String, String> CAMPUS_NAMES_MAP = Map.of(
+            SCHOOL_ID_MSK, "Москва",
+            SCHOOL_ID_KZN, "Казань",
+            SCHOOL_ID_NSK, "Новосибирск");
+    private static final Map<String, String> WAVE_PREFIX_MAP = Map.of(
+            SCHOOL_ID_MSK, "O_msk_",
+            SCHOOL_ID_KZN, "O_kzn_",
+            SCHOOL_ID_NSK, "O_nsk_");
     private final ObjectMapper mapper = new ObjectMapper();
 
     private static final String GOAL_STATUS = "goalStatus";
@@ -37,18 +48,23 @@ public class UserObjectView {
     private static final String AWARD_DATE = "awardDate";
     private static final String XP_VALUE = "expValue";
     private static final String NO_BOOTCAMP = "No bootcamp";
-    private static final String WAVE_PREFIX = "O_msk_";
+    private static final String WAVE_INTRA = "Intra";
+    private static final String PROJECT_STATUS_IN_PROGRESS = "IN_PROGRESS";
+    private static final String WAVE_UNKNOWN = "???";
 
     public UserObjectView() {
     }
 
     public UserObjectView(User user) {
-        this.login = user.getLogin();
+        this.login = user.getLogin() + (user.isGraduate()
+                ? " (alumni)"
+                : (user.isActive() ? "" : " (deactivated)"));
         this.email = user.getEmail();
-        this.campus = campusNames.get(user.getSchoolId());
+        this.campus = CAMPUS_NAMES_MAP.get(user.getSchoolId());
         this.coalition = user.getCoalitionName();
-        this.wave = getWaveName(user);
-        this.bootcamp = user.getBootcampName();
+        this.wave = getRealWave(user);
+        this.platformClass = user.getWaveName();
+        this.bootcamp = user.getBootcampName();//.equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
         this.level = user.getLevel();
         this.xp = user.getXp();
         this.peerPoints = user.getPeerPoints();
@@ -66,7 +82,7 @@ public class UserObjectView {
             JsonNode projectListJson = mapper.readTree(projectsStr);
             for (JsonNode projectJson : projectListJson) {
                 String projectStatus = projectJson.get(GOAL_STATUS).asText();
-                if (ProjectStatus.IN_PROGRESS.toString().equals(projectStatus)) {
+                if (PROJECT_STATUS_IN_PROGRESS.equals(projectStatus)) {
                     currentProjectSb.append(projectJson.get(PROJECT_NAME).asText()).append(", ");
                 }
             }
@@ -97,11 +113,19 @@ public class UserObjectView {
         return diff;
     }
 
-    private String getWaveName(User user) {
-        String waveName = user.getWaveName();
-        if (waveName.contains(WAVE_PREFIX) && waveName.length() < 14) {
+    private String getRealWave(User user) {
+        String platformClass = user.getWaveName();
+        String wavePrefix = WAVE_PREFIX_MAP.get(user.getSchoolId());
 
+        if (platformClass.startsWith(wavePrefix) && platformClass.length() == 13) {
+            platformClass = platformClass.substring(
+                    wavePrefix.length(),
+                    platformClass.indexOf("_", wavePrefix.length()));
+        } else if (platformClass.startsWith(wavePrefix)){
+            platformClass = WAVE_INTRA;
+        } else {
+            platformClass = WAVE_UNKNOWN;
         }
-        return waveName;
+        return platformClass;
     }
 }
