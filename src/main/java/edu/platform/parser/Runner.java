@@ -55,11 +55,13 @@ public class Runner {
             campusList.add(nsk);
 
             if (TEST_MODE.equals(mode)) {
+//                parser.testInit(nsk);
                 campusList.forEach(parser::testInit);
             } else if (INIT_MODE.equals(mode)) {
-                parser.initUsers(nsk);
-//                campusList.forEach(parser::initUsers);
+//                parser.initUsers(nsk);
+                campusList.forEach(parser::initUsers);
             } else if (UPDATE_MODE.equals(mode)) {
+//                parser.updateUsers(nsk);
                 campusList.forEach(parser::updateUsers);
             }
 

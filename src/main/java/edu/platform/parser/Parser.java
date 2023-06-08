@@ -39,9 +39,6 @@ public class Parser {
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
     private static final String LAST_UPDATE_TIME = "task-update.time";
 
-//    @Value("${parser.schoolId}")
-//    private String schoolId;
-
     private UserRepository userRepository;
     private LoginService loginService;
 
@@ -62,6 +59,8 @@ public class Parser {
     public void login(Campus campus) {
         System.out.println("[parser login] start login ");
         String cookie = loginService.getCookies(campus.getLogin(), campus.getPassword());
+        headers.remove("Cookie");
+        headers.remove("schoolId");
         headers.add("Cookie", cookie);
         headers.add("schoolId", campus.getSchoolId());
         headers.add("authority", AUTHORITY);
@@ -126,7 +125,7 @@ public class Parser {
             }
         }
 
-        System.out.println("[updateUsers] done");
+        System.out.println("[updateUsers] done " + LocalDateTime.now());
         setLastUpdateTime();
     }
 
