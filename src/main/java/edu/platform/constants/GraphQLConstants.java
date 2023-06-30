@@ -1,4 +1,4 @@
-package edu.platform.parser;
+package edu.platform.constants;
 
 public interface GraphQLConstants {
     String DATA = "data";
@@ -41,10 +41,35 @@ public interface GraphQLConstants {
     String TYPENAME = "__typename";
 
     String STUDENT_PROJECT = "getStudentProjectsForPublicProfileByStageGroup";
+    String GOAL_ID = "goalId";
     String GOAL_STATUS = "goalStatus";
+    String FINAL_PERCENTAGE = "finalPercentage";
     String STATUS_UNAVAILABLE = "UNAVAILABLE";
     String CORE_PROGRAM = "Core program";
     String SEARCH_BY_TEXT = "searchByText";
     String PROFILES = "profiles";
     String LOGIN = "login";
+
+    String BASIC_GRAPH = "getBasisGraph";
+    String GRAPH_NODES = "graphNodes";
+    String GRAPH_NODE_ID = "graphNodeId";
+    String NODE_CODE = "nodeCode";
+    String ENTITY_ID = "entityId";
+    String ENTITY_TYPE = "entityType";
+
+    String GOAL = "goal";
+    String GOAL_TYPE = "goalExecutionType";
+    String IS_MANDATORY = "isMandatory";
+
+    String COURSE = "course";
+    String COURSE_TYPE = "courseType";
+    String COURSE_ID = "localCourseId";
+
+    String PROJECT_NAME = "projectName";
+    String PROJECT_DESCRIPTION = "projectDescription";
+    String PROJECT_POINTS = "projectPoints";
+    String DURATION = "duration";
+    String PROJECT_STATE = "projectState";
+    String PROJECT_DATE = "projectDate";
+
 }

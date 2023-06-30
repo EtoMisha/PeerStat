@@ -12,15 +12,10 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-
-    @Column(unique=true)
     private String login;
 
     private String userId;
     private String studentId;
-    private String schoolId;
     private String email;
 
     private int level;
@@ -45,12 +40,13 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String xpHistory;
 
-    @Column(columnDefinition = "TEXT")
-    private String projects;
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<UserProject> userProjectList;
 
-//    @ToString.Exclude
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<UserProject> userProjectList;
+    @ManyToOne
+    @JoinColumn(name="schoolId", nullable = false)
+    private Campus campus;
 
     public User(String login) {
         this.login = login;

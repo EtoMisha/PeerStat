@@ -5,14 +5,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-@Component
+@Service
 public class TelegramService {
     private static final String TG_API_URL = "https://api.telegram.org/bot";
     private static final String TG_METHOD_SEND_MESSAGE = "/sendMessage";

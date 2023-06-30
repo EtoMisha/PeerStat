@@ -1,134 +1,153 @@
 package edu.platform.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.platform.View.UserObjectView;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.platform.modelView.StatUserView;
+import edu.platform.mapper.UserMapper;
+import edu.platform.models.Campus;
 import edu.platform.models.User;
-import edu.platform.repo.UserRepository;
+import edu.platform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+
+import static edu.platform.constants.GraphQLConstants.*;
 
 @Service
 public class UserService {
 
-    private static final String LOGIN = "login";
-    private static final String CAMPUS = "campus";
-    private static final String COALITION = "coalition";
-    private static final String WAVE = "wave";
-    private static final String BOOTCAMP = "bootcamp";
-    private static final String LEVEL = "level";
-    private static final String XP = "xp";
-    private static final String PEER_POINTS = "peerPoints";
-    private static final String CODE_REVIEW_POINTS = "codeReviewPoints";
-    private static final String COINS = "coins";
-    private static final String DIFF_MONTH = "diffMonth";
-    private static final String DIFF_3_MONTH = "diff3month";
-    private static final String CURRENT_PROJECT = "currentProject";
-    private static final String GOAL_STATUS = "goalStatus";
-    private static final String PROJECT_NAME = "name";
-    private static final String AWARD_DATE = "awardDate";
-    private static final String XP_VALUE = "expValue";
-
-    private static final Map<String, String> campusNames = Map.of("6bfe3c56-0211-4fe1-9e59-51616caac4dd", "Москва");
+    private static final String NO_BOOTCAMP = "No bootcamp";
+    private static final String NO_COALITION = "No Coalition";
+    private static final String NO_WAVE = "No wave";
+    private static final String NO_EDU_FORM = "No edu form";
 
     private UserRepository userRepository;
+    private UserMapper userMapper;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper MAPPER = new ObjectMapper();
+    private final TypeReference<Map<String, String>> TYPE_REFERENCE_STRING_MAP = new TypeReference<Map<String, String>> () {};
 
     @Autowired
-    public void setFormatter(UserRepository userRepository) {
+    public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public List<UserObjectView> getAllUsers() {
+    @Autowired
+    public void setUserMapper(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+
+    public List<StatUserView> getAllUsers() {
         List<User> userList = userRepository.findByOrderByXpDesc();
         return userList.stream()
-//                .filter(User::isActive)
-                .map(UserObjectView::new)
+                .map(userMapper::getUserStatView)
                 .toList();
     }
 
-//
-//    public String getAllUsersInfo() {
-//        List<User> usersList = userRepo.findAll();
-//        ArrayNode resultUsersArr = mapper.createArrayNode();
-//        for (User user : usersList) {
-//            resultUsersArr.add(getUserJson(user));
-//        }
-//        JsonNode result = mapper.createObjectNode().set("data", resultUsersArr);
-//        return result.toString();
-//    }
-//
-//    public String getUserInfo(String login) {
-//        User user = userRepo.findUserByLogin(login);
-//        JsonNode result = mapper.createObjectNode().set("data", getUserJson(user));
-//        return result.toString();
-//    }
-//
-//    public String getTestInfo() {
-//        List<User> usersList = userRepo.findAllByLevel(10);
-//        ArrayNode resultUsersArr = mapper.createArrayNode();
-//        for (User user : usersList) {
-//            resultUsersArr.add(getUserJson(user));
-//        }
-//        JsonNode result = mapper.createObjectNode().set("data", resultUsersArr);
-//        return result.toString();
-//    }
-//
-//    private ObjectNode getUserJson(User user) {
-//        ObjectNode userJson = mapper.createObjectNode();
-//        userJson.put(LOGIN, user.getLogin());
-//        userJson.put(CAMPUS, campusNames.get(user.getSchoolId()));
-//        userJson.put(COALITION, user.getCoalitionName());
-//        userJson.put(WAVE, user.getWaveName());
-//        userJson.put(BOOTCAMP, user.getBootcampName());
-//        userJson.put(LEVEL, user.getLevel());
-//        userJson.put(XP, user.getXp());
-//        userJson.put(PEER_POINTS, user.getPeerPoints());
-//        userJson.put(CODE_REVIEW_POINTS, user.getCodeReviewPoints());
-//        userJson.put(COINS, user.getCoins());
-//        userJson.put(DIFF_MONTH, getXpDiff(user, 1));
-//        userJson.put(DIFF_3_MONTH, getXpDiff(user, 3));
-//        userJson.put(CURRENT_PROJECT, getCurrentProject(user));
-//        return userJson;
-//    }
-//
-//    private String getCurrentProject(User user) {
-//        String projectsStr = user.getProjects();
-//        StringBuilder currentProjectSb = new StringBuilder();
-//        try {
-//            JsonNode projectListJson = mapper.readTree(projectsStr);
-//            for (JsonNode projectJson : projectListJson) {
-//                String projectStatus = projectJson.get(GOAL_STATUS).asText();
-//                if (ProjectStatus.IN_PROGRESS.toString().equals(projectStatus)) {
-//                    currentProjectSb.append(projectJson.get(PROJECT_NAME)).append(" ");
-//                }
-//            }
-//        } catch (JsonProcessingException e) {
-//            System.out.println("[userService] getCurrentProject ERROR " + e.getMessage());
-//        }
-//        return currentProjectSb.toString();
-//    }
-//
-//    private int getXpDiff(User user, int noOfMonths) {
-//        LocalDate minusMonth = LocalDate.now().minusMonths(noOfMonths);
-//        int diff = 0;
-//        try {
-//            JsonNode xpHistory = mapper.readTree(user.getXpHistory());
-//            int minXpValue = user.getXp();
-//            for (JsonNode row : xpHistory) {
-//                LocalDate date = LocalDate.parse(row.get(AWARD_DATE).asText());
-//                int xpValue = row.get(XP_VALUE).asInt();
-//                if (!date.isBefore(minusMonth) && xpValue < minXpValue) {
-//                    minXpValue = xpValue;
-//                }
-//            }
-//            diff = user.getXp() - minXpValue;
-//        } catch (JsonProcessingException e) {
-//            System.out.println("[userService] getMonthDiff ERROR " + e.getMessage());
-//        }
-//        return diff;
-//    }
+    public User findUserByLogin(String login) {
+        return userRepository.findUserByLogin(login);
+    }
+
+    public List<User> findUsersBySchoolId(String schoolId) {
+        return userRepository.findUsersByCampusSchoolId(schoolId);
+    }
+
+    public void save(User user) {
+        userRepository.save(user);
+    }
+
+    public void setCredentials(User user, JsonNode credentialsInfo) {
+        if (!credentialsInfo.isEmpty()) {
+            JsonNode studentJson = credentialsInfo.get(SCHOOL_21).get(GET_STUDENT_BY_LOGIN);
+            Map<String, String> credentialsMap = MAPPER.convertValue(studentJson, TYPE_REFERENCE_STRING_MAP);
+
+            user.setStudentId(credentialsMap.get(STUDENT_ID));
+            user.setUserId(credentialsMap.get(USER_ID));
+            user.setCampus(new Campus(credentialsMap.get(SCHOOL_ID)));
+            user.setActive(Boolean.parseBoolean(credentialsMap.get(IS_ACTIVE)));
+            user.setGraduate(Boolean.parseBoolean(credentialsMap.get(IS_GRADUATE)));
+        }
+    }
+
+    public void setPersonalInfo(User user, JsonNode personalInfo) throws IOException {
+        if (!personalInfo.isEmpty()) {
+            JsonNode student = personalInfo.get(STUDENT);
+            JsonNode stageInfo = student.get(STAGE_INFO);
+            JsonNode xpInfo = student.get(XP_INFO);
+            JsonNode level = xpInfo.get(LEVEL);
+
+            int waveId = stageInfo.get(WAVE_ID) != null ? stageInfo.get(WAVE_ID).asInt() : 0;
+            String waveName = stageInfo.get(WAVE_NAME) != null ? stageInfo.get(WAVE_NAME).asText() : NO_WAVE;
+            String eduForm = stageInfo.get(EDU_FORM) != null ? stageInfo.get(EDU_FORM).asText() : NO_EDU_FORM;
+
+            user.setWaveId(waveId);
+            user.setWaveName(waveName);
+            user.setEduForm(eduForm);
+            user.setXp(xpInfo.get(VALUE).asInt());
+            user.setLevel(level.get(LEVEL_CODE).asInt());
+            user.setLeftBorder(level.get(RANGE).get(LEFT_BORDER).asInt());
+            user.setRightBorder(level.get(RANGE).get(RIGHT_BORDER).asInt());
+            user.setPeerPoints(xpInfo.get(PEER_POINTS).asInt());
+            user.setCoins(xpInfo.get(COINS_COUNT).asInt());
+            user.setCodeReviewPoints(xpInfo.get(CODE_REVIEW_POINTS).asInt());
+            user.setEmail(student.get(EMAIL).asText());
+        }
+    }
+
+    public void setCoalitionInfo(User user, JsonNode coalitionInfo) {
+        if (!coalitionInfo.isEmpty()) {
+            String coalitionName = null;
+            if (coalitionInfo.get(STUDENT) != null
+                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME) != null) {
+                coalitionName = coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME).asText();
+            }
+            user.setCoalitionName((coalitionName != null && !coalitionName.isEmpty()) ? coalitionName : NO_COALITION);
+        }
+    }
+
+    public void setStageInfo(User user, JsonNode stageInfo) {
+        if (!stageInfo.isEmpty()) {
+            JsonNode school21 = stageInfo.get(SCHOOL_21);
+            JsonNode stageGroupsArr = school21.get(LOAD_STAGE_GROUPS);
+
+            String bootcampId = null;
+            String bootcampName = null;
+            for (JsonNode stageGroup : stageGroupsArr) {
+                String eduForm = stageGroup.get(STAGE_GROUPS).get(EDU_FORM).asText();
+                if (SURVIVAL_CAMP.equals(eduForm)) {
+                    bootcampId = stageGroup.get(STAGE_GROUPS).get(WAVE_ID).asText();
+                    bootcampName = stageGroup.get(STAGE_GROUPS).get(WAVE_NAME).asText();
+                }
+            }
+
+            if (bootcampId == null) {
+                bootcampId = NO_BOOTCAMP;
+                bootcampName = NO_BOOTCAMP;
+            }
+
+            user.setBootcampId(bootcampId);
+            user.setBootcampName(bootcampName);
+        }
+    }
+
+    public void setXpHistory(User user, JsonNode xpHistoryInfo) {
+        if (!xpHistoryInfo.isEmpty()) {
+            JsonNode historyList = xpHistoryInfo.get(STUDENT).get(XP_HISTORY).get(HISTORY);
+
+            ArrayNode historyData = MAPPER.createArrayNode();
+            for (JsonNode history : historyList) {
+                ObjectNode objectHistory = history.deepCopy();
+                objectHistory.remove(TYPENAME);
+                historyData.add(objectHistory);
+            }
+
+            user.setXpHistory(historyData.toString());
+        }
+    }
+
 }
