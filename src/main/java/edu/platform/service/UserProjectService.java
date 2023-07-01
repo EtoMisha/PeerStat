@@ -43,6 +43,7 @@ public class UserProjectService {
 
     public List<ProjectUserView> getProjectUsersList(long projectId) {
         return userProjectRepository.findByProjectId(projectId).stream()
+                .filter(u -> u.getProjectState() != null)
                 .map(userProjectMapper::getProjectUserView)
                 .collect(Collectors.toList());
     }

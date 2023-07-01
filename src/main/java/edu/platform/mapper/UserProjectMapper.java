@@ -15,13 +15,28 @@ import java.util.Map;
 public class UserProjectMapper {
 
     private static final Map<ProjectState, String> STATE_LOCALE = Map.of(
+            ProjectState.IN_PROGRESS, "In progres",
+            ProjectState.FAILED, "Failed",
+            ProjectState.UNAVAILABLE, "Unavailable",
+            ProjectState.COMPLETED, "Completed",
+            ProjectState.LOCKED, "Locked",
+            ProjectState.UNLOCKED, "Unlocked",
+            ProjectState.P2P_EVALUATIONS, "Evaluations",
+            ProjectState.WAITING_FOR_START, "Waiting for start",
+            ProjectState.READY_TO_START, "Ready to start",
+            ProjectState.REGISTRATION_IS_OPEN, "Registration is open"
+    );
+
+    private static final Map<ProjectState, String> STATE_LOCALE_RU = Map.of(
             ProjectState.IN_PROGRESS, "В процессе",
             ProjectState.FAILED, "Фейл",
             ProjectState.UNAVAILABLE, "Недоступен",
             ProjectState.COMPLETED, "Сдан",
             ProjectState.LOCKED, "Недоступен",
+            ProjectState.UNLOCKED, "Доспупен",
             ProjectState.P2P_EVALUATIONS, "Проверяется",
             ProjectState.WAITING_FOR_START, "Ждёт старта",
+            ProjectState.READY_TO_START, "Можно начать",
             ProjectState.REGISTRATION_IS_OPEN, "Открыта регистрация"
     );
 

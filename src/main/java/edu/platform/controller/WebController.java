@@ -26,9 +26,9 @@ public class WebController {
         return modelAndView;
     }
 
-    @GetMapping("/projects")
+    @GetMapping("/availability")
     public ModelAndView getProjectsPage() {
-        return new ModelAndView("projects");
+        return new ModelAndView("availability");
     }
 
     @GetMapping("/project")

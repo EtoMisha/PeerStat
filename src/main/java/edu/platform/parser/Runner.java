@@ -32,6 +32,8 @@ public class Runner {
     private String runTimeSetting;
     @Value("${run.plus-days}")
     private String plusDays;
+    @Value("${run.update-graph}")
+    private boolean updateGraph;
 
     private Parser parser;
     private CampusService campusService;
@@ -55,7 +57,9 @@ public class Runner {
             campusList = campusService.initCampusesFromProps(CAMPUS_PROPERTIES);
             System.out.println("[Runner] campusList " + campusList);
 
-            parser.parseGraphInfo(campusList.get(0));
+            if (updateGraph) {
+                parser.parseGraphInfo(campusList.get(0));
+            }
 
             if (TEST_MODE.equals(mode)) {
                 campusList.forEach(parser::testInit);

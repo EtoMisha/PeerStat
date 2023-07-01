@@ -46,14 +46,10 @@
         height:25px;
     }
 
-    button {
+    .map_form button {
         min-width: 550px!important;
         font-size: 70%;
     }
-
-    /*.content {*/
-    /*    width: 95%*/
-    /*}*/
 
     .table-projects {
         font-size: smaller;
@@ -62,5 +58,36 @@
 
     .intro-text {
         width: 100%!important;
+    }
+
+    th:nth-of-type(14),
+    td:nth-of-type(14) {
+        white-space: normal;
+    }
+
+    .project-info {
+        display: table;
+        padding-top: 50px;
+    }
+
+    .project-info .description {
+        font-size: smaller;
+    }
+
+    .select-form .form-block {
+        margin-top: 50px;
+        width:40%
+    }
+
+    .select-form option {
+        font-size: 30%;
+    }
+
+    .select-form button {
+        font-size: 100%;
+    }
+
+    .select-form select {
+        font-size: 100%;
     }
 }
