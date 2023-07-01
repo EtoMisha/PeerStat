@@ -2,14 +2,14 @@ package edu.platform.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.platform.models.Campus;
-import edu.platform.models.User;
-import edu.platform.repo.UserRepository;
+import edu.platform.constants.EntityType;
+import edu.platform.constants.ProjectState;
+import edu.platform.models.*;
 import edu.platform.service.LoginService;
+import edu.platform.service.ProjectService;
+import edu.platform.service.UserProjectService;
+import edu.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,12 +23,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Predicate;
 
-import static edu.platform.parser.GraphQLConstants.*;
+import static edu.platform.constants.GraphQLConstants.*;
 
 @Component
 public class Parser {
@@ -39,10 +37,9 @@ public class Parser {
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
     private static final String LAST_UPDATE_TIME = "task-update.time";
 
-//    @Value("${parser.schoolId}")
-//    private String schoolId;
-
-    private UserRepository userRepository;
+    private UserService userService;
+    private ProjectService projectService;
+    private UserProjectService userProjectService;
     private LoginService loginService;
 
     private final HttpHeaders headers = new HttpHeaders();
@@ -50,8 +47,18 @@ public class Parser {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
-    public void setRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Autowired
+    public void setProjectService(ProjectService projectService) {
+        this.projectService = projectService;
+    }
+
+    @Autowired
+    public void setUserProjectService(UserProjectService userProjectService) {
+        this.userProjectService = userProjectService;
     }
 
     @Autowired
@@ -61,7 +68,9 @@ public class Parser {
 
     public void login(Campus campus) {
         System.out.println("[parser login] start login ");
-        String cookie = loginService.getCookies(campus.getLogin(), campus.getPassword());
+        String cookie = loginService.getCookies(campus.getFullLogin(), campus.getPassword());
+        headers.remove("Cookie");
+        headers.remove("schoolId");
         headers.add("Cookie", cookie);
         headers.add("schoolId", campus.getSchoolId());
         headers.add("authority", AUTHORITY);
@@ -71,10 +80,11 @@ public class Parser {
     }
 
     public void initUsers(Campus campus){
-        System.out.println("[PARSER] initUsers by login " + campus.getLogin());
+        System.out.println("[parser initUsers] initUsers by login " + campus.getFullLogin());
         login(campus);
-        System.out.println("[initUsers] headers " + headers);
-        List<String> currentUsersList = userRepository.findUsersBySchoolId(campus.getSchoolId()).stream()
+        System.out.println("[parser initUsers] headers " + headers);
+
+        List<String> currentUsersList = userService.findUsersBySchoolId(campus.getSchoolId()).stream()
                 .map(User::getLogin).toList();
 
         int offset = 0;
@@ -83,7 +93,7 @@ public class Parser {
             while (!tempLoginsList.isEmpty()) {
                 tempLoginsList.stream()
                         .filter(Predicate.not(currentUsersList::contains))
-                        .forEach(this::parseUser);
+                        .forEach(this::parseNewUser);
 
                 offset += SEARCH_LIMIT;
                 tempLoginsList = getSearchResults(offset);
@@ -92,45 +102,44 @@ public class Parser {
             setLastUpdateTime();
 
         } catch (IOException e) {
-            System.out.println("[initUsers] ERROR offset " + offset + " " + e.getMessage());
+            System.out.println("[parser initUsers] ERROR offset " + offset + " " + e.getMessage());
         }
     }
 
-    public void testInit(Campus campus){
-        System.out.println("[PARSER] testInit by login " + campus.getLogin());
-        login(campus);
-        System.out.println("[testInit] headers " + headers);
-
-        String login = campus.getLogin().substring(0, campus.getLogin().indexOf("@student"));
-        parseUser(login);
-    }
-
     public void updateUsers(Campus campus) {
-        System.out.println("[PARSER] updateUsers by login " + campus.getLogin());
+        System.out.println("[parser updateUsers] updateUsers by login " + campus.getFullLogin());
         login(campus);
-        System.out.println("[updateUsers] headers " + headers);
+        System.out.println("[parser updateUsers] headers " + headers);
 
-        List<User> usersList = userRepository.findUsersBySchoolId(campus.getSchoolId());
+        List<User> usersList = userService.findUsersBySchoolId(campus.getSchoolId());
         for (User user : usersList) {
             try {
                 setCredentials(user);
                 setPersonalInfo(user);
                 setXpHistory(user);
-                setProject(user);
+                userService.save(user);
+                setUserProjectsFromGraph(user);
 
-                updateUser(user);
-                System.out.println("[updateUsers] user " + user.getLogin() + " ok");
-
+                System.out.println("[parser updateUsers] user " + user.getLogin() + " ok");
             } catch (Exception e) {
-                System.out.println("[updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
+                System.out.println("[parser updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
             }
         }
 
-        System.out.println("[updateUsers] done");
+        System.out.println("[parser updateUsers] done " + LocalDateTime.now());
         setLastUpdateTime();
     }
 
-    private void parseUser(String login) {
+    public void testInit(Campus campus){
+        System.out.println("[parser testInit] testInit by login " + campus.getFullLogin());
+        login(campus);
+        System.out.println("[parser testInit] headers " + headers);
+
+        String login = campus.getLogin();
+        parseNewUser(login);
+    }
+
+    private void parseNewUser(String login) {
         try {
             User user = new User(login);
             setCredentials(user);
@@ -139,8 +148,11 @@ public class Parser {
                 setCoalitionInfo(user);
                 setStageInfo(user);
                 setXpHistory(user);
-                setProject(user);
-                saveUser(user);
+                userService.save(user);
+
+                setUserProjects(user);
+                setUserProjectsFromGraph(user);
+
                 System.out.println("[parseUser] user done " + login);
             } else {
                 System.out.println("[parseUser] user skipped " + login);
@@ -151,129 +163,88 @@ public class Parser {
     }
 
     private void setCredentials(User user) throws IOException {
-        JsonNode credentialsInfo = sendRequest(RequestBody.getCredentialInfo(user));
-        if (!credentialsInfo.isEmpty()) {
-            JsonNode studentJson = credentialsInfo.get(SCHOOL_21).get(GET_STUDENT_BY_LOGIN);
-            String studentId = studentJson.get(STUDENT_ID).asText();
-            String userId = studentJson.get(USER_ID).asText();
-            String schoolId = studentJson.get(SCHOOL_ID).asText();
-            boolean isActive = studentJson.get(IS_ACTIVE).asBoolean();
-            boolean isGraduate = studentJson.get(IS_GRADUATE).asBoolean();
-
-            user.setStudentId(studentId);
-            user.setUserId(userId);
-            user.setSchoolId(schoolId);
-            user.setActive(isActive);
-            user.setGraduate(isGraduate);
-        }
+        JsonNode response = sendRequest(RequestBody.getCredentialInfo(user));
+        userService.setCredentials(user, response);
     }
 
     private void setPersonalInfo(User user) throws IOException {
-        JsonNode personalInfo = sendRequest(RequestBody.getPersonalInfo(user));
-        if (!personalInfo.isEmpty()) {
-            JsonNode student = personalInfo.get(STUDENT);
-            JsonNode stageInfo = student.get(STAGE_INFO);
-
-            int waveId = stageInfo.get(WAVE_ID) != null ? stageInfo.get(WAVE_ID).asInt() : 0;
-            String waveName = stageInfo.get(WAVE_NAME) != null ? stageInfo.get(WAVE_NAME).asText() : "No wave";
-            String eduForm = stageInfo.get(EDU_FORM) != null ? stageInfo.get(EDU_FORM).asText() : "No edu form";
-
-            JsonNode xpInfo = student.get(XP_INFO);
-            int xpValue = xpInfo.get(VALUE).asInt();
-            JsonNode level = xpInfo.get(LEVEL);
-            int levelCode = level.get(LEVEL_CODE).asInt();
-            int leftBorder = level.get(RANGE).get(LEFT_BORDER).asInt();
-            int rightBorder = level.get(RANGE).get(RIGHT_BORDER).asInt();
-            int peerPoints = xpInfo.get(PEER_POINTS).asInt();
-            int coinsCount = xpInfo.get(COINS_COUNT).asInt();
-            int codeReviewPoints = xpInfo.get(CODE_REVIEW_POINTS).asInt();
-
-            String email = student.get(EMAIL).asText();
-
-            user.setWaveId(waveId);
-            user.setWaveName(waveName);
-            user.setEduForm(eduForm);
-            user.setXp(xpValue);
-            user.setLevel(levelCode);
-            user.setLeftBorder(leftBorder);
-            user.setRightBorder(rightBorder);
-            user.setPeerPoints(peerPoints);
-            user.setCoins(coinsCount);
-            user.setCodeReviewPoints(codeReviewPoints);
-            user.setEmail(email);
-        }
+        userService.setPersonalInfo(user, sendRequest(RequestBody.getPersonalInfo(user)));
     }
 
     private void setCoalitionInfo(User user) throws IOException {
-        JsonNode coalitionInfo = sendRequest(RequestBody.getCoalitionInfo(user));
-        if (!coalitionInfo.isEmpty()) {
-            String coalitionName = null;
-            if (coalitionInfo.get(STUDENT) != null
-                    && coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME) != null) {
-                coalitionName = coalitionInfo.get(STUDENT).get(TOURNAMENT).get(MEMBER).get(COALITION).get(NAME).asText();
-            }
-            user.setCoalitionName((coalitionName != null && !coalitionName.isEmpty()) ? coalitionName : "No Coalition");
-        }
+        userService.setCoalitionInfo(user, sendRequest(RequestBody.getCoalitionInfo(user)));
     }
 
     private void setStageInfo(User user) throws IOException {
-        JsonNode stageInfo = sendRequest(RequestBody.getStageInfo(user));
-        if (!stageInfo.isEmpty()) {
-            JsonNode school21 = stageInfo.get(SCHOOL_21);
-            JsonNode stageGroupsArr = school21.get(LOAD_STAGE_GROUPS);
-
-            String bootcampId = null;
-            String bootcampName = null;
-            for (JsonNode stageGroup : stageGroupsArr) {
-                String eduForm = stageGroup.get(STAGE_GROUPS).get(EDU_FORM).asText();
-                if (SURVIVAL_CAMP.equals(eduForm)) {
-                    bootcampId = stageGroup.get(STAGE_GROUPS).get(WAVE_ID).asText();
-                    bootcampName = stageGroup.get(STAGE_GROUPS).get(WAVE_NAME).asText();
-                }
-            }
-
-            if (bootcampId == null) {
-                bootcampId = "No bootcamp";
-                bootcampName = "No bootcamp";
-            }
-
-            user.setBootcampId(bootcampId);
-            user.setBootcampName(bootcampName);
-        }
+        userService.setStageInfo(user, sendRequest(RequestBody.getStageInfo(user)));
     }
 
     private void setXpHistory(User user) throws IOException {
-        JsonNode xpHistoryInfo = sendRequest(RequestBody.getXpHistory(user));
-        if (!xpHistoryInfo.isEmpty()) {
-            JsonNode historyList = xpHistoryInfo.get(STUDENT).get(XP_HISTORY).get(HISTORY);
+        userService.setXpHistory(user, sendRequest(RequestBody.getXpHistory(user)));
+    }
 
-            ArrayNode historyData = MAPPER.createArrayNode();
-            for (JsonNode history : historyList) {
-                ObjectNode objectHistory = history.deepCopy();
-                objectHistory.remove(TYPENAME);
-                historyData.add(objectHistory);
+    private void setUserProjectsFromGraph(User user) throws IOException {
+        JsonNode graphInfo = sendRequest(RequestBody.getGraphInfo(user));
+        if (!graphInfo.isEmpty()) {
+            JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
+            for (JsonNode projectJson : projectsListJson) {
+                EntityType entityType = EntityType.valueOf(projectJson.get(ENTITY_TYPE).asText());
+                if (entityType.equals(EntityType.COURSE)) {
+                    String stateStr = projectJson.get(COURSE).get(PROJECT_STATE).asText();
+                    ProjectState projectState = stateStr == null ? null : ProjectState.valueOf(stateStr);
+                    if (projectState != null && !ProjectState.LOCKED.equals(projectState)) {
+                        Long projectId = projectJson.get(ENTITY_ID).asLong();
+                        Optional<Project> projectOpt = projectService.findById(projectId);
+                        if (projectOpt.isPresent() ) {
+                            userProjectService.createAndSaveCourse(user, projectOpt.get(), projectJson.get(COURSE));
+                        } else {
+                            System.out.println("[PARSER] ERROR Project not found, id" + projectId);
+                        }
+                    }
+                }
             }
-
-            user.setXpHistory(historyData.toString());
         }
     }
 
-    private void setProject(User user) throws IOException {
-        JsonNode projectsInfo = sendRequest(RequestBody.getProjects(user));
-        if (!projectsInfo.isEmpty()) {
-            JsonNode projectsList = projectsInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
-
-            ArrayNode projectsData = MAPPER.createArrayNode();
-            for (JsonNode project : projectsList) {
-                ObjectNode projectObj = project.deepCopy();
-                if (!STATUS_UNAVAILABLE.equals(projectObj.get(GOAL_STATUS).asText())) {
-                    projectObj.remove(TYPENAME);
-                    projectsData.add(projectObj);
+    private void setUserProjects(User user) throws IOException {
+        JsonNode userProjectInfo = sendRequest(RequestBody.getUserProjects(user));
+        if (!userProjectInfo.isEmpty()) {
+            JsonNode userProjectListJson = userProjectInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
+            for (JsonNode userProjectJson : userProjectListJson) {
+                ProjectState projectState = ProjectState.valueOf(userProjectJson.get(GOAL_STATUS).asText());
+                if (!ProjectState.UNAVAILABLE.equals(projectState)) {
+                    Long projectId = Long.parseLong(userProjectJson.get(GOAL_ID).asText());
+                    Optional<Project> projectOpt = projectService.findById(projectId);
+                    if (projectOpt.isPresent()) {
+                        userProjectService.createAndSaveGoal(user, projectOpt.get(), userProjectJson);
+                    } else {
+                        System.out.println("[PARSER] ERROR Project not found, id" + projectId);
+                    }
                 }
             }
-
-            user.setProjects(projectsData.toString());
         }
+    }
+
+    public void parseGraphInfo(Campus campus) throws IOException {
+        System.out.println("[parser parseGraphInfo] begin");
+
+        login(campus);
+        System.out.println("[parser parseGraphInfo] headers " + headers);
+
+        String userLogin = campus.getLogin();
+        User user = userService.findUserByLogin(userLogin);
+        if (user == null) {
+            user = new User(userLogin);
+            setCredentials(user);
+        }
+
+        JsonNode graphInfo = sendRequest(RequestBody.getGraphInfo(user));
+
+        if (!graphInfo.isEmpty()) {
+            JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
+            projectsListJson.forEach(projectJson -> projectService.save(projectJson));
+        }
+        System.out.println("[parser parseGraphInfo] done");
     }
 
     private List<String> getSearchResults(int offset) throws IOException {
@@ -287,7 +258,7 @@ public class Parser {
                 loginList.add(login);
             }
         }
-        System.out.println("[getSearchResults] ok, logins: " + loginList);
+        System.out.println("[parser getSearchResults] ok, logins: " + loginList);
         return loginList;
     }
 
@@ -297,17 +268,9 @@ public class Parser {
         try {
             responseStr = restTemplate.postForObject(URL, request, String.class);
         } catch (RestClientException e) {
-            System.out.println("ERROR " + e.getMessage());
+            System.out.println("[PARSER] ERROR " + e.getMessage());
         }
         return MAPPER.readTree(responseStr).get(DATA);
-    }
-
-    private void saveUser(User user) {
-        userRepository.save(user);
-    }
-
-    private void updateUser(User user) {
-        userRepository.save(user);
     }
 
     public String getLastUpdateTime() {
@@ -342,6 +305,5 @@ public class Parser {
             System.out.println("[PARSER] ERROR " + e.getMessage());
         }
     }
-
 
 }

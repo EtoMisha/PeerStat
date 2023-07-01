@@ -1,23 +1,35 @@
 package edu.platform.models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.ToString;
 
-import java.util.Properties;
+import java.util.List;
 
 @Data
+@Entity
+@Table(name = "campuses")
 public class Campus {
-    private static final String PROPERTY_PREFIX = "parser.";
-    private static final String PROPERTY_LOGIN = ".login";
-    private static final String PROPERTY_PASSWORD = ".password";
-    private static final String PROPERTY_SCHOOL_ID = ".school-id";
 
+    @Id
+    private String schoolId;
+    private String name;
+    private String campusName;
+    private String wavePrefix;
+    private String fullLogin;
     private String login;
     private String password;
-    private String schoolId;
 
-    public Campus(String campusName, Properties props) {
-        this.login = props.getProperty(PROPERTY_PREFIX + campusName + PROPERTY_LOGIN);
-        this.password = props.getProperty(PROPERTY_PREFIX + campusName + PROPERTY_PASSWORD);
-        this.schoolId = props.getProperty(PROPERTY_PREFIX + campusName + PROPERTY_SCHOOL_ID);
+    @ToString.Exclude
+    @OneToMany(mappedBy = "campus")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<User> usersList;
+
+    public Campus(String schoolId) {
+        this.schoolId = schoolId;
     }
+
+    public Campus() {}
 }
