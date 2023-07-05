@@ -32,7 +32,7 @@ public class ProjectMapper {
         projectView.setProjectDescription(project.getProjectDescription());
         projectView.setPoints(project.getPoints());
         projectView.setDuration(project.getDuration());
-        projectView.setMandatory(project.getIsMandatory() == null ? "-" : MANDATORY_LOCALE.get(project.getIsMandatory()));
+        projectView.setMandatory(MANDATORY_LOCALE.get(project.getIsMandatory()));
         projectView.setType(TYPE_LOCALE.get(project.getProjectType()));
         return projectView;
     }
