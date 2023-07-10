@@ -4,21 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.modelView.StatUserView;
-import edu.platform.models.Campus;
+import edu.platform.models.Project;
 import edu.platform.models.User;
-import edu.platform.service.CampusService;
-import edu.platform.service.UserProjectService;
-import org.springframework.beans.factory.annotation.Autowired;
+import edu.platform.models.UserProject;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class UserMapper {
-
-    private UserProjectService userProjectService;
-    private CampusService campusService;
 
     private static final String AWARD_DATE = "awardDate";
     private static final String XP_VALUE = "expValue";
@@ -27,25 +23,20 @@ public class UserMapper {
     private static final String ALUMNI = "(alumni)";
     private static final String DEACTIVATED = "(deactivated)";
 
-    @Autowired
-    public void setUserProjectService(UserProjectService userProjectService) {
-        this.userProjectService = userProjectService;
-    }
-
-    @Autowired
-    public void setCampusService(CampusService campusService) {
-        this.campusService = campusService;
-    }
+    public static final Map<String, String> CAMPUS_LOCALE = Map.of(
+            "msk", "Москва",
+            "kzn", "Казань",
+            "nsk", "Новосибирск"
+    );
 
     public StatUserView getUserStatView(User user) {
         StatUserView statUserView = new StatUserView();
-        Campus userCampus = campusService.getCampusById((user.getCampus().getSchoolId()));
 
         statUserView.setLogin(getLogin(user));
         statUserView.setEmail(user.getEmail());
-        statUserView.setCampus(userCampus.getCampusName());
+        statUserView.setCampus(CAMPUS_LOCALE.get(user.getCampus().getName()));
         statUserView.setCoalition(user.getCoalitionName());
-        statUserView.setWave(getRealWave(user, userCampus));
+        statUserView.setWave(getRealWave(user));
         statUserView.setPlatformClass(user.getWaveName());
         statUserView.setBootcamp(user.getBootcampName());//.equals(NO_BOOTCAMP) ? "" : user.getBootcampName();
         statUserView.setLevel(user.getLevel());
@@ -72,8 +63,10 @@ public class UserMapper {
     }
 
     private String getCurrentProject(User user) {
-        List<String> currentProjects = userProjectService.getCurrentUserProjects(user);
-        return String.join(" ", currentProjects);
+        return user.getUserProjectList().stream()
+                .map(UserProject::getProject)
+                .map(Project::getProjectName)
+                .collect(Collectors.joining(" "));
     }
 
     private int getXpDiff(User user, int noOfMonths) {
@@ -97,9 +90,9 @@ public class UserMapper {
         return diff;
     }
 
-    public static String getRealWave(User user, Campus campus) {
+    public static String getRealWave(User user) {
         String platformClass = user.getWaveName();
-        String wavePrefix = campus.getWavePrefix();
+        String wavePrefix = user.getCampus().getWavePrefix();
 
         if (platformClass.startsWith(wavePrefix) && platformClass.length() == 13) {
             platformClass = platformClass.substring(

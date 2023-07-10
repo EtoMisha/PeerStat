@@ -2,11 +2,8 @@ package edu.platform.mapper;
 
 import edu.platform.constants.ProjectState;
 import edu.platform.modelView.ProjectUserView;
-import edu.platform.models.Campus;
 import edu.platform.models.User;
 import edu.platform.models.UserProject;
-import edu.platform.service.CampusService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -40,23 +37,15 @@ public class UserProjectMapper {
             ProjectState.REGISTRATION_IS_OPEN, "Открыта регистрация"
     );
 
-    private CampusService campusService;
-
-    @Autowired
-    public void setCampusService(CampusService campusService) {
-        this.campusService = campusService;
-    }
-
     public ProjectUserView getProjectUserView(UserProject userProject) {
         ProjectUserView view = new ProjectUserView();
         User user = userProject.getUser();
-        Campus userCampus = campusService.getCampusById((user.getCampus().getSchoolId()));
 
         view.setLogin(UserMapper.getLogin(user));
         view.setEmail(user.getEmail());
-        view.setCampus(userCampus.getCampusName());
+        view.setCampus(UserMapper.CAMPUS_LOCALE.get(user.getCampus().getName()));
         view.setCoalition(user.getCoalitionName());
-        view.setWave(UserMapper.getRealWave(user, userCampus));
+        view.setWave(UserMapper.getRealWave(user));
         view.setPlatformClass(user.getWaveName());
         view.setLevel(user.getLevel());
         view.setXp(user.getXp());
