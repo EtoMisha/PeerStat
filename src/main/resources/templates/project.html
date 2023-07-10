@@ -177,12 +177,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="user : ${users}">
-                            <td>
-                                <a target="_blank"
-                                   th:href="@{https://edu.21-school.ru/profile/{email}(email=${user.email})}"
-                                   th:text="${user.login}">
-                                </a>
-                            </td>
+                            <td th:text="${user.login}"></td>
                             <td th:text="${user.campus}"></td>
                             <td th:text="${user.coalition}"></td>
                             <td th:text="${user.wave}"></td>
