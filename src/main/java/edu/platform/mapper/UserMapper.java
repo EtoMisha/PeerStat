@@ -3,6 +3,7 @@ package edu.platform.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.platform.constants.ProjectState;
 import edu.platform.modelView.StatUserView;
 import edu.platform.models.Project;
 import edu.platform.models.User;
@@ -58,12 +59,12 @@ public class UserMapper {
         } else if (!user.isActive()) {
             login += " " + DEACTIVATED;
         }
-
         return login;
     }
 
     private String getCurrentProject(User user) {
         return user.getUserProjectList().stream()
+                .filter(up -> up.getProjectState().equals(ProjectState.IN_PROGRESS))
                 .map(UserProject::getProject)
                 .map(Project::getProjectName)
                 .collect(Collectors.joining(" "));
