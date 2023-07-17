@@ -66,14 +66,12 @@ public class Parser {
         this.loginService = loginService;
     }
 
-    public void login(Campus campus) {
+    public void setHeaders(Campus campus) {
         System.out.println("[parser login] start login ");
-        String cookie = loginService.getCookies(campus.getFullLogin(), campus.getPassword());
-        headers.remove("Cookie");
-        headers.remove("schoolId");
-        headers.add("Cookie", cookie);
-        headers.add("schoolId", campus.getSchoolId());
-        headers.add("authority", AUTHORITY);
+
+        headers.set("Cookie", campus.getCookie());
+        headers.set("schoolId", campus.getSchoolId());
+        headers.set("authority", AUTHORITY);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         System.out.println("[parser login] ok");
@@ -81,7 +79,7 @@ public class Parser {
 
     public void initUsers(Campus campus){
         System.out.println("[parser initUsers] initUsers by login " + campus.getFullLogin());
-        login(campus);
+        setHeaders(campus);
         System.out.println("[parser initUsers] headers " + headers);
 
         List<String> currentUsersList = userService.findUsersBySchoolId(campus.getSchoolId()).stream()
@@ -108,7 +106,7 @@ public class Parser {
 
     public void updateUsers(Campus campus) {
         System.out.println("[parser updateUsers] updateUsers by login " + campus.getFullLogin());
-        login(campus);
+        setHeaders(campus);
         System.out.println("[parser updateUsers] headers " + headers);
 
         List<User> usersList = userService.findUsersBySchoolId(campus.getSchoolId());
@@ -132,7 +130,7 @@ public class Parser {
 
     public void testInit(Campus campus){
         System.out.println("[parser testInit] testInit by login " + campus.getFullLogin());
-        login(campus);
+        setHeaders(campus);
         System.out.println("[parser testInit] headers " + headers);
 
         String login = campus.getLogin();
@@ -228,7 +226,7 @@ public class Parser {
     public void parseGraphInfo(Campus campus) throws IOException {
         System.out.println("[parser parseGraphInfo] begin");
 
-        login(campus);
+        setHeaders(campus);
         System.out.println("[parser parseGraphInfo] headers " + headers);
 
         String userLogin = campus.getLogin();

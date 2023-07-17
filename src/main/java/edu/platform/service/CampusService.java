@@ -23,10 +23,16 @@ public class CampusService {
     private static final String STUDENT_POSTFIX = "@student";
 
     private CampusRepository campusRepository;
+    private LoginService loginService;
 
     @Autowired
     public void setCampusRepository(CampusRepository campusRepository) {
         this.campusRepository = campusRepository;
+    }
+
+    @Autowired
+    public void setLoginService(LoginService loginService) {
+        this.loginService = loginService;
     }
 
     public List<Campus> getAllCampuses() {
@@ -49,6 +55,7 @@ public class CampusService {
         List<Campus> campusList = new ArrayList<>();
         for (String campusTag : campusTagsList) {
             Campus campus = createFromProperties(props, campusTag);
+            setCookie(campus);
             save(campus);
             campusList.add(campus);
         }
@@ -69,5 +76,14 @@ public class CampusService {
         System.out.println("[createFromProperties] campus ok " + campus);
 
         return campus;
+    }
+
+    public void saveCookies(Campus campus) {
+        setCookie(campus);
+        save(campus);
+    }
+
+    private void setCookie(Campus campus) {
+        campus.setCookie(loginService.getCookies(campus.getLogin(), campus.getPassword()));
     }
 }

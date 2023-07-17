@@ -22,6 +22,7 @@ public class Campus {
     private String fullLogin;
     private String login;
     private String password;
+    private String cookie;
 
     @ToString.Exclude
     @OneToMany(mappedBy = "campus")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
