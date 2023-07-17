@@ -37,6 +37,8 @@ public class User {
     private int codeReviewPoints;
     private int coins;
 
+    private String location;
+
     @Column(columnDefinition = "TEXT")
     private String xpHistory;
 

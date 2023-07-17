@@ -51,6 +51,7 @@ public class UserProjectMapper {
         view.setXp(user.getXp());
         view.setState(STATE_LOCALE.get(userProject.getProjectState()));
         view.setScore(userProject.getScore());
+        view.setLocation(user.getLocation());
 
         return view;
     }

@@ -31,8 +31,8 @@ import static edu.platform.constants.GraphQLConstants.*;
 @Component
 public class Parser {
 
-    private static final String URL = "https://edu.21-school.ru/services/graphql";
-    private static final String AUTHORITY = "edu.21-school.ru";
+
+
     private static final int SEARCH_LIMIT = 25;
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
     private static final String LAST_UPDATE_TIME = "task-update.time";
@@ -42,9 +42,6 @@ public class Parser {
     private UserProjectService userProjectService;
     private LoginService loginService;
 
-    private final HttpHeaders headers = new HttpHeaders();
-    private final ObjectMapper MAPPER = new ObjectMapper();
-    private final RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
     public void setUserService(UserService userService) {
@@ -66,35 +63,22 @@ public class Parser {
         this.loginService = loginService;
     }
 
-    public void setHeaders(Campus campus) {
-        System.out.println("[parser login] start login ");
-
-        headers.set("Cookie", campus.getCookie());
-        headers.set("schoolId", campus.getSchoolId());
-        headers.set("authority", AUTHORITY);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        System.out.println("[parser login] ok");
-    }
-
     public void initUsers(Campus campus){
         System.out.println("[parser initUsers] initUsers by login " + campus.getFullLogin());
-        setHeaders(campus);
-        System.out.println("[parser initUsers] headers " + headers);
 
         List<String> currentUsersList = userService.findUsersBySchoolId(campus.getSchoolId()).stream()
                 .map(User::getLogin).toList();
 
         int offset = 0;
         try {
-            List<String> tempLoginsList = getSearchResults(offset);
+            List<String> tempLoginsList = getSearchResults(campus, offset);
             while (!tempLoginsList.isEmpty()) {
                 tempLoginsList.stream()
                         .filter(Predicate.not(currentUsersList::contains))
                         .forEach(this::parseNewUser);
 
                 offset += SEARCH_LIMIT;
-                tempLoginsList = getSearchResults(offset);
+                tempLoginsList = getSearchResults(campus, offset);
             }
 
             setLastUpdateTime();
@@ -106,8 +90,6 @@ public class Parser {
 
     public void updateUsers(Campus campus) {
         System.out.println("[parser updateUsers] updateUsers by login " + campus.getFullLogin());
-        setHeaders(campus);
-        System.out.println("[parser updateUsers] headers " + headers);
 
         List<User> usersList = userService.findUsersBySchoolId(campus.getSchoolId());
         for (User user : usersList) {
@@ -130,8 +112,6 @@ public class Parser {
 
     public void testInit(Campus campus){
         System.out.println("[parser testInit] testInit by login " + campus.getFullLogin());
-        setHeaders(campus);
-        System.out.println("[parser testInit] headers " + headers);
 
         String login = campus.getLogin();
         parseNewUser(login);
@@ -161,28 +141,28 @@ public class Parser {
     }
 
     private void setCredentials(User user) throws IOException {
-        JsonNode response = sendRequest(RequestBody.getCredentialInfo(user));
+        JsonNode response = sendRequest(user.getCampus(), RequestBody.getCredentialInfo(user));
         userService.setCredentials(user, response);
     }
 
     private void setPersonalInfo(User user) throws IOException {
-        userService.setPersonalInfo(user, sendRequest(RequestBody.getPersonalInfo(user)));
+        userService.setPersonalInfo(user, sendRequest(user.getCampus(), RequestBody.getPersonalInfo(user)));
     }
 
     private void setCoalitionInfo(User user) throws IOException {
-        userService.setCoalitionInfo(user, sendRequest(RequestBody.getCoalitionInfo(user)));
+        userService.setCoalitionInfo(user, sendRequest(user.getCampus(), RequestBody.getCoalitionInfo(user)));
     }
 
     private void setStageInfo(User user) throws IOException {
-        userService.setStageInfo(user, sendRequest(RequestBody.getStageInfo(user)));
+        userService.setStageInfo(user, sendRequest(user.getCampus(), RequestBody.getStageInfo(user)));
     }
 
     private void setXpHistory(User user) throws IOException {
-        userService.setXpHistory(user, sendRequest(RequestBody.getXpHistory(user)));
+        userService.setXpHistory(user, sendRequest(user.getCampus(), RequestBody.getXpHistory(user)));
     }
 
     private void setUserProjectsFromGraph(User user) throws IOException {
-        JsonNode graphInfo = sendRequest(RequestBody.getGraphInfo(user));
+        JsonNode graphInfo = sendRequest(user.getCampus(), RequestBody.getGraphInfo(user));
         if (!graphInfo.isEmpty()) {
             JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
             for (JsonNode projectJson : projectsListJson) {
@@ -205,7 +185,7 @@ public class Parser {
     }
 
     private void setUserProjects(User user) throws IOException {
-        JsonNode userProjectInfo = sendRequest(RequestBody.getUserProjects(user));
+        JsonNode userProjectInfo = sendRequest(user.getCampus(), RequestBody.getUserProjects(user));
         if (!userProjectInfo.isEmpty()) {
             JsonNode userProjectListJson = userProjectInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
             for (JsonNode userProjectJson : userProjectListJson) {
@@ -226,9 +206,6 @@ public class Parser {
     public void parseGraphInfo(Campus campus) throws IOException {
         System.out.println("[parser parseGraphInfo] begin");
 
-        setHeaders(campus);
-        System.out.println("[parser parseGraphInfo] headers " + headers);
-
         String userLogin = campus.getLogin();
         User user = userService.findUserByLogin(userLogin);
         if (user == null) {
@@ -236,7 +213,7 @@ public class Parser {
             setCredentials(user);
         }
 
-        JsonNode graphInfo = sendRequest(RequestBody.getGraphInfo(user));
+        JsonNode graphInfo = sendRequest(campus, RequestBody.getGraphInfo(user));
 
         if (!graphInfo.isEmpty()) {
             JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
@@ -245,9 +222,9 @@ public class Parser {
         System.out.println("[parser parseGraphInfo] done");
     }
 
-    private List<String> getSearchResults(int offset) throws IOException {
+    private List<String> getSearchResults(Campus campus, int offset) throws IOException {
         List<String> loginList = new ArrayList<>();
-        JsonNode searchInfo = sendRequest(RequestBody.getSearchResults(SEARCH_LIMIT, offset));
+        JsonNode searchInfo = sendRequest(campus, RequestBody.getSearchResults(SEARCH_LIMIT, offset));
         if (!searchInfo.isEmpty()) {
             JsonNode profiles = searchInfo.get(SCHOOL_21).get(SEARCH_BY_TEXT).get(PROFILES).get(PROFILES);
             for (JsonNode profile : profiles) {
@@ -260,15 +237,8 @@ public class Parser {
         return loginList;
     }
 
-    private JsonNode sendRequest(String requestBody) throws IOException {
-        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
-        String responseStr = "";
-        try {
-            responseStr = restTemplate.postForObject(URL, request, String.class);
-        } catch (RestClientException e) {
-            System.out.println("[PARSER] ERROR " + e.getMessage());
-        }
-        return MAPPER.readTree(responseStr).get(DATA);
+    private JsonNode sendRequest(Campus campus, String requestBody) throws IOException {
+        return loginService.sendRequest(campus, requestBody);
     }
 
     public String getLastUpdateTime() {
