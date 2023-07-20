@@ -46,7 +46,7 @@ public class User {
     @OneToMany(mappedBy = "user")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<UserProject> userProjectList;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="schoolId", nullable = false)
     private Campus campus;
 

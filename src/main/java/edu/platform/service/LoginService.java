@@ -52,6 +52,7 @@ public class LoginService {
         WebDriver driver = new ChromeDriver(chromeOptions);
         driver.manage().window().maximize();
 
+        String cookiesStr;
         try {
             driver.get(URL);
             TimeUnit.SECONDS.sleep(1);
@@ -70,23 +71,33 @@ public class LoginService {
                         .append(cookie.getValue())
                         .append(";");
             }
-            return cookiesSB.toString();
+            cookiesStr = cookiesSB.toString();
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
             driver.quit();
         }
+        System.out.println("[getCookies] done  " + cookiesStr);
+        return cookiesStr;
     }
 
     public String getUserLocation(User user) {
-        String location = "";
+        String location = "-";
         try {
             JsonNode personalInfo = sendRequest(user.getCampus(), RequestBody.getPersonalInfo(user));
-            JsonNode workStation = personalInfo.get("student").get("getWorkstationByLogin");
-            if (workStation != null) {
-                location = workStation.get("hostName").asText();
+            if (personalInfo != null) {
+//                System.out.println("[getUserLocation] personalInfo " + personalInfo);
+                JsonNode workStation = personalInfo.get("student").get("getWorkstationByLogin");
+//                System.out.println("[getUserLocation] workStation " + workStation);
+
+                if (workStation != null && workStation.has("hostName")) {
+                    location = workStation.get("hostName").asText();
+                }
+            } else {
+                System.out.println("[getUserLocation] PERSONAL INFO NULL user" + user);
             }
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

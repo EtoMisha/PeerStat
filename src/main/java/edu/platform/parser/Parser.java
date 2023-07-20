@@ -75,7 +75,7 @@ public class Parser {
             while (!tempLoginsList.isEmpty()) {
                 tempLoginsList.stream()
                         .filter(Predicate.not(currentUsersList::contains))
-                        .forEach(this::parseNewUser);
+                        .forEach(login -> parseNewUser(campus, login));
 
                 offset += SEARCH_LIMIT;
                 tempLoginsList = getSearchResults(campus, offset);
@@ -114,22 +114,49 @@ public class Parser {
         System.out.println("[parser testInit] testInit by login " + campus.getFullLogin());
 
         String login = campus.getLogin();
-        parseNewUser(login);
+        parseNewUser(campus, login);
     }
 
-    private void parseNewUser(String login) {
+    private void parseNewUser(Campus campus, String login) {
         try {
             User user = new User(login);
+            user.setCampus(campus);
+//            userService.save(user);
+            System.out.println("[parseNewUser] 1 campus " + campus);
+            System.out.println("[parseNewUser] 1 user.getCampus() " + user.getCampus());
+
             setCredentials(user);
+            System.out.println("[parseNewUser] 2 campus " + campus);
+            System.out.println("[parseNewUser] 2 user.getCampus() " + user.getCampus());
+
+            System.out.println("[parseNewUser] setCredentials ok");
+
+            user.setCampus(campus);
             setPersonalInfo(user);
+            System.out.println("[parseNewUser] setPersonalInfo ok");
+
             if (CORE_PROGRAM.equals(user.getEduForm())) {
+                user.setCampus(campus);
                 setCoalitionInfo(user);
+                System.out.println("[parseNewUser] setCoalitionInfo ok");
+
+                user.setCampus(campus);
                 setStageInfo(user);
+                System.out.println("[parseNewUser] setStageInfo ok");
+
+                user.setCampus(campus);
                 setXpHistory(user);
+                System.out.println("[parseNewUser] setXpHistory ok");
+
                 userService.save(user);
+                System.out.println("[parseNewUser] save ok");
 
                 setUserProjects(user);
+                System.out.println("[parseNewUser] setUserProjects ok");
+
                 setUserProjectsFromGraph(user);
+                System.out.println("[parseNewUser] setUserProjects ok");
+
 
                 System.out.println("[parseUser] user done " + login);
             } else {
@@ -142,6 +169,7 @@ public class Parser {
 
     private void setCredentials(User user) throws IOException {
         JsonNode response = sendRequest(user.getCampus(), RequestBody.getCredentialInfo(user));
+        System.out.println("[setCred] user.getCampus() " + user.getCampus());
         userService.setCredentials(user, response);
     }
 
@@ -210,6 +238,7 @@ public class Parser {
         User user = userService.findUserByLogin(userLogin);
         if (user == null) {
             user = new User(userLogin);
+            user.setCampus(campus);
             setCredentials(user);
         }
 

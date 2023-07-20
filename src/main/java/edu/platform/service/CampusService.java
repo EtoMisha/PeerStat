@@ -84,6 +84,6 @@ public class CampusService {
     }
 
     private void setCookie(Campus campus) {
-        campus.setCookie(loginService.getCookies(campus.getLogin(), campus.getPassword()));
+        campus.setCookie(loginService.getCookies(campus.getFullLogin(), campus.getPassword()));
     }
 }
