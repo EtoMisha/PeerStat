@@ -35,6 +35,7 @@ public class LoginService {
         WebDriver driver = new ChromeDriver(chromeOptions);
         driver.manage().window().maximize();
 
+        String cookiesStr;
         try {
             driver.get(URL);
             TimeUnit.SECONDS.sleep(1);
@@ -53,13 +54,15 @@ public class LoginService {
                         .append(cookie.getValue())
                         .append(";");
             }
-            return cookiesSB.toString();
+            cookiesStr = cookiesSB.toString();
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
             driver.quit();
         }
+
+        return cookiesStr;
     }
 
 }
