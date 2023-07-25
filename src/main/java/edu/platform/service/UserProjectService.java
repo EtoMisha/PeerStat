@@ -22,6 +22,7 @@ public class UserProjectService {
 
     private UserProjectRepository userProjectRepository;
     private UserProjectMapper userProjectMapper;
+    private LoginService loginService;
 
     @Autowired
     public void setUserProjectRepository(UserProjectRepository userProjectRepository) {
@@ -31,6 +32,11 @@ public class UserProjectService {
     @Autowired
     public void setUserProjectMapper(UserProjectMapper userProjectMapper) {
         this.userProjectMapper = userProjectMapper;
+    }
+
+    @Autowired
+    public void setLoginService(LoginService loginService) {
+        this.loginService = loginService;
     }
 
     public List<String> getCurrentUserProjects(User user) {
@@ -44,6 +50,7 @@ public class UserProjectService {
     public List<ProjectUserView> getProjectUsersList(long projectId) {
         return userProjectRepository.findByProjectId(projectId).stream()
                 .filter(u -> u.getProjectState() != null)
+                .map(this::updateLocation)
                 .map(userProjectMapper::getProjectUserView)
                 .collect(Collectors.toList());
     }
@@ -69,6 +76,12 @@ public class UserProjectService {
         userProject.setId(new UserProjectKey(user.getLogin(), project.getId()));
         userProject.setUser(user);
         userProject.setProject(project);
+        return userProject;
+    }
+
+    private UserProject updateLocation(UserProject userProject) {
+        String location = loginService.getUserLocation(userProject.getUser());
+        userProject.getUser().setLocation(location);
         return userProject;
     }
 }

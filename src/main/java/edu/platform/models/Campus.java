@@ -1,9 +1,6 @@
 package edu.platform.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 
@@ -22,6 +19,9 @@ public class Campus {
     private String fullLogin;
     private String login;
     private String password;
+
+    @Column(columnDefinition = "TEXT")
+    private String cookie;
 
     @ToString.Exclude
     @OneToMany(mappedBy = "campus")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)

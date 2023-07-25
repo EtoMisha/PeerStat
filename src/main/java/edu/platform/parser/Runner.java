@@ -69,29 +69,45 @@ public class Runner {
                 campusList.forEach(parser::updateUsers);
             }
 
-            scheduleRun();
+            scheduleDataUpdate();
+            scheduleCookieUpdate();
 
         } catch (IOException e) {
             System.out.println("[Runner] ERROR " + e.getMessage());
         }
     }
 
-    private void scheduleRun() {
+    private void scheduleDataUpdate() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         LocalTime runTime = LocalTime.parse(runTimeSetting);
         long delay = LocalDateTime.now().until(LocalDate.now()
                 .plusDays(Integer.parseInt(plusDays))
                 .atTime(runTime), ChronoUnit.MINUTES);
 
-        System.out.println("[Runner] scheduleRun time " + runTime + " delay " + delay);
+        System.out.println("[Runner] scheduleDataUpdate time " + runTime + " delay " + delay);
 
-        final Runnable scheduleRunner = this::scheduleUpdate;
+        final Runnable scheduleRunner = this::dataUpdate;
         scheduler.scheduleAtFixedRate(scheduleRunner, delay,
                 TimeUnit.DAYS.toMinutes(1), TimeUnit.MINUTES);
     }
 
-    private void scheduleUpdate() {
-        System.out.println("[Runner] scheduleUpdate " + LocalDateTime.now());
+    private void scheduleCookieUpdate() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        System.out.println("[Runner] scheduleCookieUpdate time delay " + TimeUnit.HOURS.toMinutes(6));
+
+        final Runnable scheduleRunner = this::cookieUpdate;
+        scheduler.scheduleAtFixedRate(scheduleRunner, TimeUnit.HOURS.toMinutes(6),
+                TimeUnit.HOURS.toMinutes(6), TimeUnit.MINUTES);
+    }
+
+    private void dataUpdate() {
+        System.out.println("[Runner] dataUpdate " + LocalDateTime.now());
         campusList.forEach(parser::updateUsers);
+    }
+
+    private void cookieUpdate() {
+        System.out.println("[Runner] cookieUpdate " + LocalDateTime.now());
+        campusList.forEach(campusService::saveCookies);
     }
 }
