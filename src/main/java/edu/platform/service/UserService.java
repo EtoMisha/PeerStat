@@ -68,7 +68,6 @@ public class UserService {
 
             user.setStudentId(credentialsMap.get(STUDENT_ID));
             user.setUserId(credentialsMap.get(USER_ID));
-            user.setCampus(new Campus(credentialsMap.get(SCHOOL_ID)));
             user.setActive(Boolean.parseBoolean(credentialsMap.get(IS_ACTIVE)));
             user.setGraduate(Boolean.parseBoolean(credentialsMap.get(IS_GRADUATE)));
         }

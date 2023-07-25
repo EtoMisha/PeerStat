@@ -16,4 +16,5 @@ public class ProjectUserView {
     private int xp;
     private String state;
     private int score;
+    private String location;
 }
