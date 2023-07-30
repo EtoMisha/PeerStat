@@ -71,6 +71,7 @@ public class Runner {
 
             scheduleDataUpdate();
             scheduleCookieUpdate();
+            scheduleLocationsUpdate();
 
         } catch (IOException e) {
             System.out.println("[Runner] ERROR " + e.getMessage());
@@ -94,11 +95,21 @@ public class Runner {
     private void scheduleCookieUpdate() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-        System.out.println("[Runner] scheduleCookieUpdate time delay " + TimeUnit.HOURS.toMinutes(6));
+        long period = TimeUnit.HOURS.toMinutes(6);
+        System.out.println("[Runner] scheduleCookieUpdate period " + period);
 
         final Runnable scheduleRunner = this::cookieUpdate;
-        scheduler.scheduleAtFixedRate(scheduleRunner, TimeUnit.HOURS.toMinutes(6),
-                TimeUnit.HOURS.toMinutes(6), TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(scheduleRunner, period, period, TimeUnit.MINUTES);
+    }
+
+    private void scheduleLocationsUpdate() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        long period = TimeUnit.MINUTES.toMinutes(10);
+        System.out.println("[Runner] scheduleLocationsUpdate period " + period);
+
+        final Runnable scheduleRunner = this::locationsUpdate;
+        scheduler.scheduleAtFixedRate(scheduleRunner, TimeUnit.MINUTES.toMinutes(1), period, TimeUnit.MINUTES);
     }
 
     private void dataUpdate() {
@@ -109,5 +120,10 @@ public class Runner {
     private void cookieUpdate() {
         System.out.println("[Runner] cookieUpdate " + LocalDateTime.now());
         campusList.forEach(campusService::saveCookies);
+    }
+
+    private void locationsUpdate() {
+        System.out.println("[Runner] locationsUpdate " + LocalDateTime.now());
+        campusList.forEach(campusService::updateUserLocations);
     }
 }

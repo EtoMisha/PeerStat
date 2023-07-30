@@ -1,15 +1,15 @@
 package edu.platform.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.platform.models.Campus;
+import edu.platform.parser.RequestBody;
 import edu.platform.repository.CampusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 @Service
 public class CampusService {
@@ -24,6 +24,9 @@ public class CampusService {
 
     private CampusRepository campusRepository;
     private LoginService loginService;
+    private UserService userService;
+
+    private Map<Campus, List<String>> campusOnlineUsers = new HashMap<>();
 
     @Autowired
     public void setCampusRepository(CampusRepository campusRepository) {
@@ -33,6 +36,11 @@ public class CampusService {
     @Autowired
     public void setLoginService(LoginService loginService) {
         this.loginService = loginService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     public List<Campus> getAllCampuses() {
@@ -56,6 +64,7 @@ public class CampusService {
         for (String campusTag : campusTagsList) {
             Campus campus = createFromProperties(props, campusTag);
             setCookie(campus);
+            campusOnlineUsers.put(campus, new ArrayList<>());
             save(campus);
             campusList.add(campus);
         }
@@ -85,5 +94,54 @@ public class CampusService {
 
     private void setCookie(Campus campus) {
         campus.setCookie(loginService.getCookies(campus.getFullLogin(), campus.getPassword()));
+    }
+
+    public void updateUserLocations(Campus campus) {
+        try {
+            Map<Integer, String> clustersMap = new HashMap<>();
+            Map<String, String> currentLocationsMap = new HashMap<>();
+
+            JsonNode buildingInfo = loginService.sendRequest(campus, RequestBody.getBuildingInfo());
+            if (buildingInfo != null) {
+                JsonNode buildingsList = buildingInfo.get("student").get("getBuildings");
+                for (JsonNode building : buildingsList) {
+                    JsonNode clustersList = building.get("classrooms");
+                    for (JsonNode cluster : clustersList) {
+                        Integer clusterId = cluster.get("id").asInt();
+                        String clusterName = cluster.get("number").asText();
+                        clustersMap.put(clusterId, clusterName);
+                    }
+                }
+            } else {
+                System.out.println("[updateUserLocations] buildingInfo NULL");
+            }
+
+            for (Integer clusterId : clustersMap.keySet()) {
+                JsonNode clusterPlanInfo = loginService.sendRequest(campus, RequestBody.getClusterPlanInfo(clusterId));
+                if (clusterPlanInfo != null) {
+                    JsonNode placesList = clusterPlanInfo.get("student").get("getClusterPlanStudentsByClusterId").get("occupiedPlaces");
+                    for (JsonNode place : placesList) {
+                        String location = clustersMap.get(clusterId) + " "
+                                + place.get("row").asText() + "-"
+                                + place.get("number").asInt();
+                        String userLogin = place.get("user").get("login").asText();
+                        currentLocationsMap.put(userLogin.substring(0, userLogin.indexOf("@")), location);
+                    }
+                }
+            }
+
+            for (String login : campusOnlineUsers.get(campus)) {
+                if (!currentLocationsMap.containsKey(login)) {
+                    currentLocationsMap.put(login, "");
+                    campusOnlineUsers.get(campus).remove(login);
+                }
+            }
+
+            userService.updateUsersLocation(currentLocationsMap);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

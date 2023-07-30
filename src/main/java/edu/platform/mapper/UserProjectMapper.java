@@ -51,7 +51,7 @@ public class UserProjectMapper {
         view.setXp(user.getXp());
         view.setState(STATE_LOCALE.get(userProject.getProjectState()));
         view.setScore(userProject.getScore());
-        view.setLocation(user.getLocation());
+        view.setLocation((user.getLocation() == null || user.getLocation().isEmpty()) ? "(out of campus)" : user.getLocation());
 
         return view;
     }

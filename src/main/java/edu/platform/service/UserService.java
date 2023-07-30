@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static edu.platform.constants.GraphQLConstants.*;
@@ -147,6 +148,17 @@ public class UserService {
 
             user.setXpHistory(historyData.toString());
         }
+    }
+
+    public void updateUsersLocation(Map<String, String> usersLocationsMap) {
+        for (String login : usersLocationsMap.keySet()) {
+            User user = userRepository.findUserByLogin(login);
+            if (user != null) {
+                user.setLocation(usersLocationsMap.get(login));
+                save(user);
+            }
+        }
+        System.out.println("[updateUsersLocations] done " + LocalDateTime.now());
     }
 
 }
