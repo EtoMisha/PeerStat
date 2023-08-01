@@ -121,3 +121,30 @@ td:nth-of-type(14) {
     font-style: italic;
     padding-top: 15px;
 }
+
+
+.select-form {
+    padding-bottom: 50px;
+    display: table;
+}
+
+.form-block {
+    float: left;
+    margin-right: 20px;
+}
+
+.form-block select {
+    width: 100%;
+}
+
+button {
+    /*padding: 14px 0;*/
+    border: none;
+    /*min-width: 500px;*/
+    padding: 8px 8px;
+    background-color: #BBBBBB;
+}
+
+button:hover {
+    opacity: 0.8;
+}

@@ -123,7 +123,7 @@ public class Runner {
     }
 
     private void locationsUpdate() {
-        System.out.println("[Runner] locationsUpdate " + LocalDateTime.now());
+//        System.out.println("[Runner] locationsUpdate " + LocalDateTime.now());
         campusList.forEach(campusService::updateUserLocations);
     }
 }

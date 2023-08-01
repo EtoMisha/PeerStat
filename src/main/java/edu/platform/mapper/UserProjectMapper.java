@@ -12,7 +12,7 @@ import java.util.Map;
 public class UserProjectMapper {
 
     private static final Map<ProjectState, String> STATE_LOCALE = Map.of(
-            ProjectState.IN_PROGRESS, "In progres",
+            ProjectState.IN_PROGRESS, "In progress",
             ProjectState.FAILED, "Failed",
             ProjectState.UNAVAILABLE, "Unavailable",
             ProjectState.COMPLETED, "Completed",

@@ -58,6 +58,13 @@ public class UserService {
         return userRepository.findUsersByCampusSchoolId(schoolId);
     }
 
+    public List<StatUserView> findUsersByCampusName(String campusName) {
+        List<User> userList = userRepository.findUsersByCampusName(campusName);
+        return userList.stream()
+                .map(userMapper::getUserStatView)
+                .toList();
+    }
+
     public void save(User user) {
         userRepository.save(user);
     }
