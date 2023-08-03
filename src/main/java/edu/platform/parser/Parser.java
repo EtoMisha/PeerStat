@@ -102,7 +102,7 @@ public class Parser {
                 setUserProjects(user);
                 setUserProjectsFromGraph(user);
 
-                System.out.println("[parser updateUsers] user " + user.getLogin() + " ok");
+//                System.out.println("[parser updateUsers] user " + user.getLogin() + " ok");
             } catch (Exception e) {
                 System.out.println("[parser updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
             }
