@@ -20,9 +20,12 @@ public class WebController {
     private TelegramService telegramService;
 
     @GetMapping("/stat")
-    public ModelAndView getStatPage () {
+    public ModelAndView getStatPage (@RequestParam(defaultValue = "") String campus) {
         ModelAndView modelAndView = new ModelAndView("stat");
-        modelAndView.addObject("users", userService.getAllUsers());
+        if (campus != null && !campus.isEmpty()) {
+//            modelAndView.addObject("users", userService.getAllUsers());
+            modelAndView.addObject("users", userService.findUsersByCampusName(campus));
+        }
         return modelAndView;
     }
 

@@ -24,6 +24,15 @@ public class UserProjectService {
     private UserProjectMapper userProjectMapper;
     private LoginService loginService;
 
+    private static final List<ProjectState> ACTIVE_PROJECT_STATES = List.of(
+            ProjectState.FAILED,
+            ProjectState.COMPLETED,
+            ProjectState.IN_PROGRESS,
+            ProjectState.WAITING_FOR_START,
+            ProjectState.READY_TO_START,
+            ProjectState.P2P_EVALUATIONS
+    );
+
     @Autowired
     public void setUserProjectRepository(UserProjectRepository userProjectRepository) {
         this.userProjectRepository = userProjectRepository;
@@ -49,8 +58,7 @@ public class UserProjectService {
 
     public List<ProjectUserView> getProjectUsersList(long projectId) {
         return userProjectRepository.findByProjectId(projectId).stream()
-                .filter(u -> u.getProjectState() != null)
-                .map(this::updateLocation)
+                .filter(this::isProjectStateActive)
                 .map(userProjectMapper::getProjectUserView)
                 .collect(Collectors.toList());
     }
@@ -79,9 +87,7 @@ public class UserProjectService {
         return userProject;
     }
 
-    private UserProject updateLocation(UserProject userProject) {
-        String location = loginService.getUserLocation(userProject.getUser());
-        userProject.getUser().setLocation(location);
-        return userProject;
+    private boolean isProjectStateActive(UserProject up) {
+        return up.getProjectState() != null && ACTIVE_PROJECT_STATES.contains(up.getProjectState());
     }
 }

@@ -19,7 +19,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static edu.platform.constants.GraphQLConstants.DATA;
@@ -80,28 +80,6 @@ public class LoginService {
         }
         System.out.println("[getCookies] done  " + cookiesStr);
         return cookiesStr;
-    }
-
-    public String getUserLocation(User user) {
-        String location = "-";
-        try {
-            JsonNode personalInfo = sendRequest(user.getCampus(), RequestBody.getPersonalInfo(user));
-            if (personalInfo != null) {
-//                System.out.println("[getUserLocation] personalInfo " + personalInfo);
-                JsonNode workStation = personalInfo.get("student").get("getWorkstationByLogin");
-//                System.out.println("[getUserLocation] workStation " + workStation);
-
-                if (workStation != null && workStation.has("hostName")) {
-                    location = workStation.get("hostName").asText();
-                }
-            } else {
-                System.out.println("[getUserLocation] PERSONAL INFO NULL user" + user);
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return location;
     }
 
     public JsonNode sendRequest(Campus campus, String requestBody) throws IOException {

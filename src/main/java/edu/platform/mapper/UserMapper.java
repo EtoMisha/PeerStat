@@ -64,7 +64,8 @@ public class UserMapper {
 
     private String getCurrentProject(User user) {
         return user.getUserProjectList().stream()
-                .filter(up -> up.getProjectState().equals(ProjectState.IN_PROGRESS))
+                .filter(up -> up.getProjectState().equals(ProjectState.IN_PROGRESS)
+                        || up.getProjectState().equals(ProjectState.P2P_EVALUATIONS))
                 .map(UserProject::getProject)
                 .map(Project::getProjectName)
                 .collect(Collectors.joining(" "));
