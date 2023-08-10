@@ -1,5 +1,7 @@
 package edu.platform.models;
 
+import edu.platform.connections.ProjectSkill;
+import edu.platform.connections.UserProject;
 import edu.platform.constants.EntityType;
 import edu.platform.constants.ProjectType;
 import jakarta.persistence.*;
@@ -22,10 +24,7 @@ public class Project {
     private String projectName;
     private int points;
     private int duration;
-
-    private String subjectLink;
-    private String accessAfter;
-    private String restartBefore;
+    private String executionConditions;
 
     @Column(columnDefinition = "TEXT")
     private String projectDescription;
@@ -36,7 +35,14 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectType projectType;
 
-    @ToString.Exclude
+    @OneToMany
+    @JoinColumn(name = "parent_project_id")
+    private List<Project> nextProjects;
+
+    @OneToMany
+    @JoinColumn(name = "project_id")
+    private List<ProjectSkill> projectSkills;
+
     @OneToMany(mappedBy = "project")
     private List<UserProject> userProjectList;
 }

@@ -1,7 +1,6 @@
 package edu.platform.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.constants.EntityType;
 import edu.platform.constants.ProjectState;
 import edu.platform.models.*;
@@ -10,13 +9,8 @@ import edu.platform.service.ProjectService;
 import edu.platform.service.UserProjectService;
 import edu.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DefaultPropertiesPersister;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -64,7 +58,7 @@ public class Parser {
     }
 
     public void initUsers(Campus campus){
-        System.out.println("[parser initUsers] initUsers by login " + campus.getFullLogin());
+        System.out.println("[parser initUsers] initUsers by login " + campus.getUserFullLogin());
 
         List<String> currentUsersList = userService.findUsersBySchoolId(campus.getSchoolId()).stream()
                 .map(User::getLogin).toList();
@@ -89,7 +83,7 @@ public class Parser {
     }
 
     public void updateUsers(Campus campus) {
-        System.out.println("[parser updateUsers] updateUsers by login " + campus.getFullLogin());
+        System.out.println("[parser updateUsers] updateUsers by login " + campus.getUserFullLogin());
 
         List<User> usersList = userService.findUsersBySchoolId(campus.getSchoolId());
         for (User user : usersList) {
@@ -113,9 +107,9 @@ public class Parser {
     }
 
     public void testInit(Campus campus){
-        System.out.println("[parser testInit] testInit by login " + campus.getFullLogin());
+        System.out.println("[parser testInit] testInit by login " + campus.getUserFullLogin());
 
-        String login = campus.getLogin();
+        String login = campus.getUserLogin();
         parseNewUser(campus, login);
     }
 
@@ -210,7 +204,7 @@ public class Parser {
     public void parseGraphInfo(Campus campus) throws IOException {
         System.out.println("[parser parseGraphInfo] begin");
 
-        String userLogin = campus.getLogin();
+        String userLogin = campus.getUserLogin();
         User user = userService.findUserByLogin(userLogin);
         if (user == null) {
             user = new User(userLogin);

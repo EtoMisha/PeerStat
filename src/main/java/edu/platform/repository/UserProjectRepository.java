@@ -1,7 +1,7 @@
 package edu.platform.repository;
 
 import edu.platform.models.User;
-import edu.platform.models.UserProject;
+import edu.platform.connections.UserProject;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

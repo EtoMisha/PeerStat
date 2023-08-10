@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import edu.platform.models.Campus;
 import edu.platform.parser.RequestBody;
 import edu.platform.repository.CampusRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
@@ -22,28 +21,15 @@ public class CampusService {
     private static final String PROPERTY_PASSWORD = ".password";
     private static final String STUDENT_POSTFIX = "@student";
 
-    private CampusRepository campusRepository;
-    private LoginService loginService;
-    private UserService userService;
+    private final CampusRepository campusRepository;
+    private final LoginService loginService;
 
-    private Map<Campus, List<String>> campusOnlineUsers = new HashMap<>();
-
-    @Autowired
-    public void setCampusRepository(CampusRepository campusRepository) {
+    public CampusService(CampusRepository campusRepository, LoginService loginService) {
         this.campusRepository = campusRepository;
-    }
-
-    @Autowired
-    public void setLoginService(LoginService loginService) {
         this.loginService = loginService;
     }
 
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-
-    public List<Campus> getAllCampuses() {
+    public List<Campus> getAll() {
         return campusRepository.findAll();
     }
 
@@ -54,6 +40,11 @@ public class CampusService {
     public Campus getCampusById(String schoolId) {
         return campusRepository.findBySchoolId(schoolId);
     }
+
+
+
+
+
 
     public List<Campus> initCampusesFromProps(String propertiesName) throws IOException {
         Properties props = new Properties();
@@ -78,9 +69,9 @@ public class CampusService {
         campus.setSchoolId(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_SCHOOL_ID));
         campus.setCampusName(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_NAME));
         campus.setWavePrefix(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_WAVE_PREFIX));
-        campus.setFullLogin(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_LOGIN));
-        campus.setLogin(campus.getFullLogin().substring(0, campus.getFullLogin().indexOf(STUDENT_POSTFIX)));
-        campus.setPassword(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_PASSWORD));
+        campus.setUserFullLogin(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_LOGIN));
+        campus.setUserLogin(campus.getUserFullLogin().substring(0, campus.getUserFullLogin().indexOf(STUDENT_POSTFIX)));
+        campus.setUserPassword(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_PASSWORD));
 
         System.out.println("[createFromProperties] campus ok " + campus);
 
@@ -93,7 +84,7 @@ public class CampusService {
     }
 
     private void setCookie(Campus campus) {
-        campus.setCookie(loginService.getCookies(campus.getFullLogin(), campus.getPassword()));
+        campus.setCookie(loginService.getCookies(campus.getUserFullLogin(), campus.getUserPassword()));
     }
 
     public void updateUserLocations(Campus campus) {

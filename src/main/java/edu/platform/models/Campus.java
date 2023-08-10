@@ -12,20 +12,35 @@ import java.util.List;
 public class Campus {
 
     @Id
+    private Long id;
     private String schoolId;
     private String name;
     private String campusName;
     private String wavePrefix;
-    private String fullLogin;
-    private String login;
-    private String password;
+
+    private String userFullLogin;
+    private String userLogin;
+    private String userPassword;
 
     @Column(columnDefinition = "TEXT")
     private String cookie;
 
-    @ToString.Exclude
-    @OneToMany(mappedBy = "campus")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<User> usersList;
+    @OneToMany(mappedBy = "campus")
+    private List<Cluster> clusters;
+
+    @OneToMany(mappedBy = "campus")
+    private List<Coalition> coalitions;
+
+    @OneToMany(mappedBy = "campus")
+    private List<User> users;
+
+    @OneToMany
+    @JoinColumn(name = "campus_id")
+    private List<Event> events;
+
+    @OneToMany
+    @JoinColumn(name = "campus_id")
+    private List<Notification> notifications;
 
     public Campus(String schoolId) {
         this.schoolId = schoolId;

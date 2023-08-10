@@ -3,7 +3,7 @@ package edu.platform.mapper;
 import edu.platform.constants.ProjectState;
 import edu.platform.modelView.ProjectUserView;
 import edu.platform.models.User;
-import edu.platform.models.UserProject;
+import edu.platform.connections.UserProject;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

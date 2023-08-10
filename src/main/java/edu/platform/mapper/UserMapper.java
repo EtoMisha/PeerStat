@@ -7,7 +7,7 @@ import edu.platform.constants.ProjectState;
 import edu.platform.modelView.StatUserView;
 import edu.platform.models.Project;
 import edu.platform.models.User;
-import edu.platform.models.UserProject;
+import edu.platform.connections.UserProject;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
