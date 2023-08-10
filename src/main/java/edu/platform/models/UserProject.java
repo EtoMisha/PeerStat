@@ -1,19 +1,21 @@
 package edu.platform.models;
 
 import edu.platform.constants.ProjectState;
+import edu.platform.models.Project;
+import edu.platform.models.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Table(name = "user_projects")
-public class UserProject implements Serializable {
+public class UserProject {
 
-    @EmbeddedId
-    UserProjectKey id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private int score;
     private LocalDateTime finishDate;
@@ -22,10 +24,8 @@ public class UserProject implements Serializable {
     private ProjectState projectState;
 
     @ManyToOne
-    @JoinColumn(name="userLogin", nullable = false, insertable = false, updatable = false)
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "projectId", nullable = false, insertable = false, updatable = false)
     private Project project;
 }

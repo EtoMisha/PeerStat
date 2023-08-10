@@ -1,8 +1,8 @@
 package edu.platform.models;
 
+import edu.platform.constants.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.List;
 
@@ -12,10 +12,9 @@ import java.util.List;
 public class User {
 
     @Id
-    private String login;
-
     private String userId;
     private String studentId;
+    private String login;
     private String email;
 
     private int level;
@@ -28,31 +27,42 @@ public class User {
     private String waveName;
     private String bootcampId;
     private String bootcampName;
-    private String coalitionName;
 
-    private boolean isActive;
-    private boolean isGraduate;
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 
     private int peerPoints;
     private int codeReviewPoints;
     private int coins;
 
-    private String location;
+    private double logTimeWeek;
+    private double logTimeMonth;
 
     @Column(columnDefinition = "TEXT")
     private String xpHistory;
 
-    @ToString.Exclude
-    @OneToMany(mappedBy = "user")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user")
     private List<UserProject> userProjectList;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="schoolId", nullable = false)
+    @ManyToOne
     private Campus campus;
 
-    public User(String login) {
-        this.login = login;
-    }
+    @ManyToOne
+    private Coalition coalition;
+
+    @OneToOne
+    private Workplace workplace;
+
+    @OneToOne
+    private Feedback feedbacks;
+
+    @OneToMany
+    @JoinColumn(name = "user_id")
+    private List<UserAchievement> achievements;
+
+    @OneToMany
+    @JoinColumn(name = "user_id")
+    private List<XpGain> xpGains;
 
     public User() {}
 }

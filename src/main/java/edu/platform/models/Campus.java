@@ -2,7 +2,6 @@ package edu.platform.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.List;
 
@@ -12,23 +11,37 @@ import java.util.List;
 public class Campus {
 
     @Id
-    private String schoolId;
+    private String id;
     private String name;
     private String campusName;
     private String wavePrefix;
-    private String fullLogin;
-    private String login;
-    private String password;
+
+    private String userFullLogin;
+    private String userLogin;
+    private String userPassword;
 
     @Column(columnDefinition = "TEXT")
     private String cookie;
 
-    @ToString.Exclude
-    @OneToMany(mappedBy = "campus")//, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<User> usersList;
+    @OneToMany(mappedBy = "campus")
+    private List<Cluster> clusters;
 
-    public Campus(String schoolId) {
-        this.schoolId = schoolId;
+    @OneToMany(mappedBy = "campus")
+    private List<Coalition> coalitions;
+
+    @OneToMany(mappedBy = "campus")
+    private List<User> users;
+
+    @OneToMany
+    @JoinColumn(name = "campus_id")
+    private List<Event> events;
+
+    @OneToMany
+    @JoinColumn(name = "campus_id")
+    private List<Notification> notifications;
+
+    public Campus(String id) {
+        this.id = id;
     }
 
     public Campus() {}

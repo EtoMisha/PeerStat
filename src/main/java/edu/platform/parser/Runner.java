@@ -2,7 +2,10 @@ package edu.platform.parser;
 
 import edu.platform.models.Campus;
 import edu.platform.service.CampusService;
-import org.springframework.beans.factory.annotation.Autowired;
+import edu.platform.service.ProjectService;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -18,13 +21,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@RequiredArgsConstructor
 @Component
 public class Runner {
     private static final String CAMPUS_PROPERTIES = "campus.properties";
-
     private static final String TEST_MODE = "test";
     private static final String INIT_MODE = "init";
     private static final String UPDATE_MODE = "update";
+
+    private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
+
 
     @Value("${run.mode}")
     private String mode;
@@ -35,30 +41,28 @@ public class Runner {
     @Value("${run.update-graph}")
     private boolean updateGraph;
 
-    private Parser parser;
-    private CampusService campusService;
+    private final Parser parser;
+    private final CampusService campusService;
+    private final ProjectService projectService;
+
     private List<Campus> campusList;
-
-    @Autowired
-    public void setParser(Parser parser) {
-        this.parser = parser;
-    }
-
-    @Autowired
-    public void setCampusService(CampusService campusService) {
-        this.campusService = campusService;
-    }
 
     @EventListener(ApplicationReadyEvent.class)
     public void runAtStart() {
-        System.out.println("[Runner] run mode " + mode);
+        LOG.info("Run mode " + mode);
 
         try {
             campusList = campusService.initCampusesFromProps(CAMPUS_PROPERTIES);
-            System.out.println("[Runner] campusList " + campusList);
+            campusList.forEach(parser::updateCookies);
+//            campusList = campusService.getAll();
 
             if (updateGraph) {
-                parser.parseGraphInfo(campusList.get(0));
+                Campus campus = campusList.get(0);
+
+                parser.parseGraphInfo(campus);
+//                projectService.getAll().stream()
+//                        .filter(project -> project.getProjectType() == null)
+//                        .forEach(project -> parser.updateProjects(campus, project));
             }
 
             if (TEST_MODE.equals(mode)) {
@@ -74,7 +78,7 @@ public class Runner {
             scheduleLocationsUpdate();
 
         } catch (IOException e) {
-            System.out.println("[Runner] ERROR " + e.getMessage());
+            LOG.error("Runner error " + e.getMessage());
         }
     }
 
@@ -85,7 +89,7 @@ public class Runner {
                 .plusDays(Integer.parseInt(plusDays))
                 .atTime(runTime), ChronoUnit.MINUTES);
 
-        System.out.println("[Runner] scheduleDataUpdate time " + runTime + " delay " + delay);
+        LOG.info("ScheduleDataUpdate time " + runTime + " delay " + delay);
 
         final Runnable scheduleRunner = this::dataUpdate;
         scheduler.scheduleAtFixedRate(scheduleRunner, delay,
@@ -96,7 +100,7 @@ public class Runner {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         long period = TimeUnit.HOURS.toMinutes(6);
-        System.out.println("[Runner] scheduleCookieUpdate period " + period);
+        LOG.info("ScheduleCookieUpdate period " + period);
 
         final Runnable scheduleRunner = this::cookieUpdate;
         scheduler.scheduleAtFixedRate(scheduleRunner, period, period, TimeUnit.MINUTES);
@@ -106,24 +110,23 @@ public class Runner {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         long period = TimeUnit.MINUTES.toMinutes(10);
-        System.out.println("[Runner] scheduleLocationsUpdate period " + period);
+        LOG.info("ScheduleLocationsUpdate period " + period);
 
         final Runnable scheduleRunner = this::locationsUpdate;
         scheduler.scheduleAtFixedRate(scheduleRunner, TimeUnit.MINUTES.toMinutes(1), period, TimeUnit.MINUTES);
     }
 
     private void dataUpdate() {
-        System.out.println("[Runner] dataUpdate " + LocalDateTime.now());
+        LOG.info("Data Update " + LocalDateTime.now());
         campusList.forEach(parser::updateUsers);
     }
 
     private void cookieUpdate() {
-        System.out.println("[Runner] cookieUpdate " + LocalDateTime.now());
-        campusList.forEach(campusService::saveCookies);
+        LOG.info("CookieUpdate " + LocalDateTime.now());
+        campusList.forEach(parser::updateCookies);
     }
 
     private void locationsUpdate() {
-//        System.out.println("[Runner] locationsUpdate " + LocalDateTime.now());
-        campusList.forEach(campusService::updateUserLocations);
+        campusList.forEach(parser::updateWorkplaces);
     }
 }

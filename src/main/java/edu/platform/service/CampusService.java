@@ -1,16 +1,18 @@
 package edu.platform.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.platform.models.Campus;
-import edu.platform.parser.RequestBody;
+import edu.platform.parser.Parser;
 import edu.platform.repository.CampusRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+@RequiredArgsConstructor
 @Service
 public class CampusService {
     private static final String PROPERTY_CAMPUS_LIST = "campus.list";
@@ -22,28 +24,11 @@ public class CampusService {
     private static final String PROPERTY_PASSWORD = ".password";
     private static final String STUDENT_POSTFIX = "@student";
 
-    private CampusRepository campusRepository;
-    private LoginService loginService;
-    private UserService userService;
+    private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
 
-    private Map<Campus, List<String>> campusOnlineUsers = new HashMap<>();
+    private final CampusRepository campusRepository;
 
-    @Autowired
-    public void setCampusRepository(CampusRepository campusRepository) {
-        this.campusRepository = campusRepository;
-    }
-
-    @Autowired
-    public void setLoginService(LoginService loginService) {
-        this.loginService = loginService;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-
-    public List<Campus> getAllCampuses() {
+    public List<Campus> getAll() {
         return campusRepository.findAll();
     }
 
@@ -51,97 +36,83 @@ public class CampusService {
         campusRepository.save(campus);
     }
 
-    public Campus getCampusById(String schoolId) {
-        return campusRepository.findBySchoolId(schoolId);
-    }
-
     public List<Campus> initCampusesFromProps(String propertiesName) throws IOException {
         Properties props = new Properties();
         props.load(new FileInputStream(propertiesName));
         List<String> campusTagsList = List.of(props.getProperty(PROPERTY_CAMPUS_LIST).split(","));
-        System.out.println("[initCampus] campusTagsList " + campusTagsList);
+        LOG.info("Campuses tags " + campusTagsList);
+
         List<Campus> campusList = new ArrayList<>();
-        for (String campusTag : campusTagsList) {
-            Campus campus = createFromProperties(props, campusTag);
-            setCookie(campus);
-            campusOnlineUsers.put(campus, new ArrayList<>());
-            save(campus);
-            campusList.add(campus);
-        }
+        campusTagsList.forEach(tag -> campusList.add(createFromProperties(props, tag)));
         return campusList;
     }
 
     public Campus createFromProperties(Properties props, String campusTag) {
-        System.out.println("[createFromProperties] " + campusTag);
         Campus campus = new Campus();
         campus.setName(campusTag);
-        campus.setSchoolId(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_SCHOOL_ID));
+        campus.setId(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_SCHOOL_ID));
         campus.setCampusName(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_NAME));
         campus.setWavePrefix(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_WAVE_PREFIX));
-        campus.setFullLogin(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_LOGIN));
-        campus.setLogin(campus.getFullLogin().substring(0, campus.getFullLogin().indexOf(STUDENT_POSTFIX)));
-        campus.setPassword(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_PASSWORD));
+        campus.setUserFullLogin(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_LOGIN));
+        campus.setUserLogin(campus.getUserFullLogin().substring(0, campus.getUserFullLogin().indexOf(STUDENT_POSTFIX)));
+        campus.setUserPassword(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_PASSWORD));
+        campusRepository.save(campus);
 
-        System.out.println("[createFromProperties] campus ok " + campus);
-
+        LOG.info("Campus created: " + campus.getName());
         return campus;
     }
 
-    public void saveCookies(Campus campus) {
-        setCookie(campus);
+    public void setCookies(Campus campus, String cookies) {
+        campus.setCookie(cookies);
         save(campus);
     }
 
-    private void setCookie(Campus campus) {
-        campus.setCookie(loginService.getCookies(campus.getFullLogin(), campus.getPassword()));
-    }
-
-    public void updateUserLocations(Campus campus) {
-        try {
-            Map<Integer, String> clustersMap = new HashMap<>();
-            Map<String, String> currentLocationsMap = new HashMap<>();
-
-            JsonNode buildingInfo = loginService.sendRequest(campus, RequestBody.getBuildingInfo());
-            if (buildingInfo != null) {
-                JsonNode buildingsList = buildingInfo.get("student").get("getBuildings");
-                for (JsonNode building : buildingsList) {
-                    JsonNode clustersList = building.get("classrooms");
-                    for (JsonNode cluster : clustersList) {
-                        Integer clusterId = cluster.get("id").asInt();
-                        String clusterName = cluster.get("number").asText();
-                        clustersMap.put(clusterId, clusterName);
-                    }
-                }
-            } else {
-                System.out.println("[updateUserLocations] buildingInfo NULL");
-            }
-
-            for (Integer clusterId : clustersMap.keySet()) {
-                JsonNode clusterPlanInfo = loginService.sendRequest(campus, RequestBody.getClusterPlanInfo(clusterId));
-                if (clusterPlanInfo != null) {
-                    JsonNode placesList = clusterPlanInfo.get("student").get("getClusterPlanStudentsByClusterId").get("occupiedPlaces");
-                    for (JsonNode place : placesList) {
-                        String location = clustersMap.get(clusterId) + " "
-                                + place.get("row").asText() + "-"
-                                + place.get("number").asInt();
-                        String userLogin = place.get("user").get("login").asText();
-                        currentLocationsMap.put(userLogin.substring(0, userLogin.indexOf("@")), location);
-                    }
-                }
-            }
-
-            for (String login : campusOnlineUsers.get(campus)) {
-                if (!currentLocationsMap.containsKey(login)) {
-                    currentLocationsMap.put(login, "");
-                    campusOnlineUsers.get(campus).remove(login);
-                }
-            }
-
-            userService.updateUsersLocation(currentLocationsMap);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
+//    public void updateUserLocations(Campus campus) {
+//        try {
+//            Map<Integer, String> clustersMap = new HashMap<>();
+//            Map<String, String> currentLocationsMap = new HashMap<>();
+//
+//            JsonNode buildingInfo = loginService.sendRequest(campus, Request.getBuildingInfo());
+//            if (buildingInfo != null) {
+//                JsonNode buildingsList = buildingInfo.get("student").get("getBuildings");
+//                for (JsonNode building : buildingsList) {
+//                    JsonNode clustersList = building.get("classrooms");
+//                    for (JsonNode cluster : clustersList) {
+//                        Integer clusterId = cluster.get("id").asInt();
+//                        String clusterName = cluster.get("number").asText();
+//                        clustersMap.put(clusterId, clusterName);
+//                    }
+//                }
+//            } else {
+//                System.out.println("[updateUserLocations] buildingInfo NULL");
+//            }
+//
+//            for (Integer clusterId : clustersMap.keySet()) {
+//                JsonNode clusterPlanInfo = loginService.sendRequest(campus, Request.getClusterPlanInfo(clusterId));
+//                if (clusterPlanInfo != null) {
+//                    JsonNode placesList = clusterPlanInfo.get("student").get("getClusterPlanStudentsByClusterId").get("occupiedPlaces");
+//                    for (JsonNode place : placesList) {
+//                        String location = clustersMap.get(clusterId) + " "
+//                                + place.get("row").asText() + "-"
+//                                + place.get("number").asInt();
+//                        String userLogin = place.get("user").get("login").asText();
+//                        currentLocationsMap.put(userLogin.substring(0, userLogin.indexOf("@")), location);
+//                    }
+//                }
+//            }
+//
+//            for (String login : campusOnlineUsers.get(campus)) {
+//                if (!currentLocationsMap.containsKey(login)) {
+//                    currentLocationsMap.put(login, "");
+//                    campusOnlineUsers.get(campus).remove(login);
+//                }
+//            }
+//
+//            userService.updateUsersLocation(currentLocationsMap);
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//    }
 }

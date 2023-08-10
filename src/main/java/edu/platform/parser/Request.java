@@ -1,12 +1,10 @@
 package edu.platform.parser;
 
-//import ru.world21.common.models.User;
-
 import edu.platform.models.User;
 
 import java.time.LocalDate;
 
-public class RequestBody {
+public class Request {
 
     public static String getSearchResults(int limit, int offset) {
         return String.format("""
@@ -62,7 +60,7 @@ public class RequestBody {
                   },
                   "query": "query publicProfileGetPersonalInfo($userId: UUID!, $studentId: UUID!, $login: String!, $schoolId: UUID!) {\\n  student {\\n    getAvatarByUserId(userId: $userId)\\n    getStageGroupS21PublicProfile(studentId: $studentId) {\\n      waveId\\n      waveName\\n      eduForm\\n      __typename\\n    }\\n    getExperiencePublicProfile(userId: $userId) {\\n      value\\n      level {\\n        levelCode\\n        range {\\n          leftBorder\\n          rightBorder\\n          __typename\\n        }\\n        __typename\\n      }\\n      cookiesCount\\n      coinsCount\\n      codeReviewPoints\\n      __typename\\n    }\\n    getEmailbyUserId(userId: $userId)\\n    getWorkstationByLogin(login: $login) {\\n      workstationId\\n      hostName\\n      row\\n      number\\n      __typename\\n    }\\n    getClassRoomByLogin(login: $login) {\\n      id\\n      number\\n      floor\\n      __typename\\n    }\\n    getFeedbackStatisticsAverageScore(studentId: $studentId) {\\n      countFeedback\\n      feedbackAverageScore {\\n        categoryCode\\n        categoryName\\n        value\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n  user {\\n    getSchool(schoolId: $schoolId) {\\n      id\\n      fullName\\n      shortName\\n      address\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId(), user.getStudentId(), user.getCampus().getSchoolId(), user.getLogin());
+                """, user.getUserId(), user.getStudentId(), user.getCampus().getId(), user.getLogin());
     }
 
     public static String getCoalitionInfo(User user) {
@@ -77,20 +75,6 @@ public class RequestBody {
                 """, user.getUserId());
     }
 
-    public static String getAchievements(User user){
-        return String.format("""
-                {
-                  "operationName": "publicProfileLoadAverageLogtime",
-                  "variables": {
-                    "login": "%s@student.21-school.ru",
-                    "schoolID": "%s",
-                    "date": "%s"
-                  },
-                  "query": "query publicProfileLoadAverageLogtime($login: String!, $schoolID: UUID!, $date: Date!) {\\n  school21 {\\n    loadAverageLogtime(login: $login, schoolID: $schoolID, date: $date) {\\n      week\\n      month\\n      weekPerMonth\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
-                }
-                """, user.getLogin(), user.getCampus().getSchoolId(), LocalDate.now());
-    }
-
     public static String getLogTime(User user) {
         return String.format("""
                 {
@@ -102,7 +86,7 @@ public class RequestBody {
                   },
                   "query": "query publicProfileLoadAverageLogtime($login: String!, $schoolID: UUID!, $date: Date!) {\\n  school21 {\\n    loadAverageLogtime(login: $login, schoolID: $schoolID, date: $date) {\\n      week\\n      month\\n      weekPerMonth\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getLogin(), user.getCampus().getSchoolId(), LocalDate.now());
+                """, user.getLogin(), user.getCampus().getId(), LocalDate.now());
     }
 
     public static String getStageInfo(User user) {
@@ -115,10 +99,10 @@ public class RequestBody {
                   },
                   "query": "query publicProfileLoadStageGroups($userId: UUID!, $schoolId: UUID!) {\\n  school21 {\\n    loadStudentStageGroupsS21PublicProfile(userId: $userId, schoolId: $schoolId) {\\n      stageGroupStudentId\\n      studentId\\n      stageGroupS21 {\\n        waveId\\n        waveName\\n        eduForm\\n        active\\n        __typename\\n      }\\n      safeSchool {\\n        fullName\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId(), user.getCampus().getSchoolId());
+                """, user.getUserId(), user.getCampus().getId());
     }
 
-    public static String getXpHistory(User user) {
+    public static String getXpGains(User user) {
         return String.format("""
                 {
                   "operationName": "publicProfileGetXpGraph",
@@ -162,8 +146,9 @@ public class RequestBody {
                   "variables": {
                     "goalId": "%d"
                   },
-                  "query": "query getProjectInfo($goalId: ID!) {\\n  student {\\n    getModuleById(goalId: $goalId) {\\n      ...ProjectInfo\\n      __typename\\n    }\\n    getModuleCoverInformation(goalId: $goalId) {\\n      ...ModuleCoverInfo\\n      __typename\\n    }\\n    getP2PChecksInfo(goalId: $goalId) {\\n      ...P2PInfo\\n      __typename\\n    }\\n    getStudentCodeReviewByGoalId(goalId: $goalId) {\\n      ...StudentsCodeReview\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\\nfragment ProjectInfo on StudentModule {\\n  id\\n  moduleTitle\\n  finalPercentage\\n  finalPoint\\n  goalExecutionType\\n  displayedGoalStatus\\n  accessBeforeStartProgress\\n  resultModuleCompletion\\n  finishedExecutionDateByScheduler\\n  durationFromStageSubjectGroupPlan\\n  currentAttemptNumber\\n  isDeadlineFree\\n  isRetryAvailable\\n  localCourseId\\n  teamSettings {\\n    ...teamSettingsInfo\\n    __typename\\n  }\\n  studyModule {\\n    id\\n    idea\\n    duration\\n    goalPoint\\n    retrySettings {\\n      ...RetrySettings\\n      __typename\\n    }\\n    levels {\\n      id\\n      goalElements {\\n        id\\n        tasks {\\n          id\\n          taskId\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n  currentTask {\\n    ...CurrentInternshipTaskInfo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment teamSettingsInfo on TeamSettings {\\n  teamCreateOption\\n  minAmountMember\\n  maxAmountMember\\n  enableSurrenderTeam\\n  __typename\\n}\\n\\nfragment RetrySettings on ModuleAttemptsSettings {\\n  maxModuleAttempts\\n  isUnlimitedAttempts\\n  __typename\\n}\\n\\nfragment CurrentInternshipTaskInfo on StudentTask {\\n  id\\n  taskId\\n  task {\\n    id\\n    assignmentType\\n    studentTaskAdditionalAttributes {\\n      cookiesCount\\n      maxCodeReviewCount\\n      codeReviewCost\\n      ciCdMode\\n      __typename\\n    }\\n    checkTypes\\n    __typename\\n  }\\n  lastAnswer {\\n    id\\n    __typename\\n  }\\n  teamSettings {\\n    ...teamSettingsInfo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment ModuleCoverInfo on ModuleCoverInformation {\\n  isOwnStudentTimeline\\n  softSkills {\\n    softSkillId\\n    softSkillName\\n    totalPower\\n    maxPower\\n    currentUserPower\\n    achievedUserPower\\n    teamRole\\n    __typename\\n  }\\n  timeline {\\n    ...TimelineItem\\n    __typename\\n  }\\n  projectStatistics {\\n    ...ProjectStatistics\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment TimelineItem on ProjectTimelineItem {\\n  type\\n  status\\n  start\\n  end\\n  children {\\n    ...TimelineItemChildren\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment TimelineItemChildren on ProjectTimelineItem {\\n  type\\n  elementType\\n  status\\n  start\\n  end\\n  order\\n  __typename\\n}\\n\\nfragment ProjectStatistics on ProjectStatistics {\\n  registeredStudents\\n  inProgressStudents\\n  evaluationStudents\\n  finishedStudents\\n  acceptedStudents\\n  failedStudents\\n  retriedStudentsPercentage\\n  groupProjectStatistics {\\n    ...GroupProjectStatistics\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment GroupProjectStatistics on GroupProjectStatistics {\\n  inProgressTeams\\n  evaluationTeams\\n  finishedTeams\\n  acceptedTeams\\n  failedTeams\\n  __typename\\n}\\n\\nfragment P2PInfo on P2PChecksInfo {\\n  cookiesCount\\n  periodOfVerification\\n  projectReviewsInfo {\\n    ...ProjectReviewsInfo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment ProjectReviewsInfo on ProjectReviewsInfo {\\n  reviewByStudentCount\\n  relevantReviewByStudentsCount\\n  reviewByInspectionStaffCount\\n  relevantReviewByInspectionStaffCount\\n  __typename\\n}\\n\\nfragment StudentsCodeReview on StudentCodeReviewsWithCountRound {\\n  countRound1\\n  countRound2\\n  codeReviewsInfo {\\n    maxCodeReviewCount\\n    codeReviewDuration\\n    codeReviewCost\\n    __typename\\n  }\\n  __typename\\n}\\n"
-                }""", goalId);
+                  "query": "query getProjectInfo($goalId: ID!) {\\n  student {\\n    getModuleById(goalId: $goalId) {\\n      ...ProjectInfo\\n      __typename\\n    }\\n    getModuleCoverInformation(goalId: $goalId) {\\n      ...ModuleCoverInfo\\n      __typename\\n    }\\n    getP2PChecksInfo(goalId: $goalId) {\\n      ...P2PInfo\\n      __typename\\n    }\\n    getStudentCodeReviewByGoalId(goalId: $goalId) {\\n      ...StudentsCodeReview\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\\nfragment ProjectInfo on StudentModule {\\n  id\\n  moduleTitle\\n  finalPercentage\\n  finalPoint\\n  goalExecutionType\\n  displayedGoalStatus\\n  accessBeforeStartProgress\\n  resultModuleCompletion\\n  finishedExecutionDateByScheduler\\n  durationFromStageSubjectGroupPlan\\n  currentAttemptNumber\\n  isDeadlineFree\\n  isRetryAvailable\\n  localCourseId\\n  courseBaseParameters {\\n    isGradedCourse\\n    __typename\\n  }\\n  teamSettings {\\n    ...teamSettingsInfo\\n    __typename\\n  }\\n  studyModule {\\n    id\\n    idea\\n    duration\\n    goalPoint\\n    retrySettings {\\n      ...RetrySettings\\n      __typename\\n    }\\n    levels {\\n      id\\n      goalElements {\\n        id\\n        tasks {\\n          id\\n          taskId\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n  currentTask {\\n    ...CurrentInternshipTaskInfo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment teamSettingsInfo on TeamSettings {\\n  teamCreateOption\\n  minAmountMember\\n  maxAmountMember\\n  enableSurrenderTeam\\n  __typename\\n}\\n\\nfragment RetrySettings on ModuleAttemptsSettings {\\n  maxModuleAttempts\\n  isUnlimitedAttempts\\n  __typename\\n}\\n\\nfragment CurrentInternshipTaskInfo on StudentTask {\\n  id\\n  taskId\\n  task {\\n    id\\n    assignmentType\\n    studentTaskAdditionalAttributes {\\n      cookiesCount\\n      maxCodeReviewCount\\n      codeReviewCost\\n      ciCdMode\\n      __typename\\n    }\\n    checkTypes\\n    __typename\\n  }\\n  lastAnswer {\\n    id\\n    __typename\\n  }\\n  teamSettings {\\n    ...teamSettingsInfo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment ModuleCoverInfo on ModuleCoverInformation {\\n  isOwnStudentTimeline\\n  softSkills {\\n    softSkillId\\n    softSkillName\\n    totalPower\\n    maxPower\\n    currentUserPower\\n    achievedUserPower\\n    teamRole\\n    __typename\\n  }\\n  timeline {\\n    ...TimelineItem\\n    __typename\\n  }\\n  projectStatistics {\\n    ...ProjectStatistics\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment TimelineItem on ProjectTimelineItem {\\n  type\\n  status\\n  start\\n  end\\n  children {\\n    ...TimelineItemChildren\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment TimelineItemChildren on ProjectTimelineItem {\\n  type\\n  elementType\\n  status\\n  start\\n  end\\n  order\\n  __typename\\n}\\n\\nfragment ProjectStatistics on ProjectStatistics {\\n  registeredStudents\\n  inProgressStudents\\n  evaluationStudents\\n  finishedStudents\\n  acceptedStudents\\n  failedStudents\\n  retriedStudentsPercentage\\n  groupProjectStatistics {\\n    ...GroupProjectStatistics\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment GroupProjectStatistics on GroupProjectStatistics {\\n  inProgressTeams\\n  evaluationTeams\\n  finishedTeams\\n  acceptedTeams\\n  failedTeams\\n  __typename\\n}\\n\\nfragment P2PInfo on P2PChecksInfo {\\n  cookiesCount\\n  periodOfVerification\\n  projectReviewsInfo {\\n    ...ProjectReviewsInfo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment ProjectReviewsInfo on ProjectReviewsInfo {\\n  reviewByStudentCount\\n  relevantReviewByStudentsCount\\n  reviewByInspectionStaffCount\\n  relevantReviewByInspectionStaffCount\\n  __typename\\n}\\n\\nfragment StudentsCodeReview on StudentCodeReviewsWithCountRound {\\n  countRound1\\n  countRound2\\n  codeReviewsInfo {\\n    maxCodeReviewCount\\n    codeReviewDuration\\n    codeReviewCost\\n    __typename\\n  }\\n  __typename\\n}\\n"
+                }
+                """, goalId);
     }
 
     public static String getBuildingInfo() {
@@ -187,6 +172,30 @@ public class RequestBody {
                   "query": "query getCampusPlanOccupied($clusterId: ID!) {\\n  student {\\n    getClusterPlanStudentsByClusterId(clusterId: $clusterId) {\\n      occupiedPlaces {\\n        row\\n        number\\n        stageGroupName\\n        stageName\\n        user {\\n          id\\n          login\\n          avatarUrl\\n          __typename\\n        }\\n        experience {\\n          id\\n          value\\n          level {\\n            id\\n            range {\\n              id\\n              levelCode\\n              leftBorder\\n              rightBorder\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        studentType\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
                 """, clusterId);
+    }
+
+    public static String getAchievements(User user) {
+        return String.format("""
+                {
+                  "operationName": "publicProfileGetAchievements",
+                  "variables": {
+                    "userId": "%s"
+                  },
+                  "query": "query publicProfileGetAchievements($userId: UUID!) {\\n  student {\\n    getBadgesPublicProfile(userId: $userId) {\\n      points\\n      id\\n      badge {\\n        id\\n        name\\n        avatarUrl\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
+                }
+                """, user.getUserId());
+    }
+
+    public static String getUserSkills(User user) {
+        return String.format("""
+                {
+                  "operationName": "publicProfileGetSoftSkills",
+                  "variables": {
+                    "studentId": "%s"
+                  },
+                  "query": "query publicProfileGetSoftSkills($studentId: UUID!) {\\n  school21 {\\n    getSoftSkillsByStudentId(studentId: $studentId) {\\n      id\\n      type\\n      code\\n      totalPower\\n      hueSaturationLightness\\n      __typename\\n    }\\n    getSoftSkillLimitByStudentId(studentId: $studentId) {\\n      powerLimit\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
+                }
+                """, user.getStudentId());
     }
 
 }

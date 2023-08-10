@@ -4,7 +4,6 @@ import edu.platform.constants.EntityType;
 import edu.platform.constants.ProjectType;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
 public class Project {
 
     @Id
-    private Long id;
+    private Long entityId;
     private int nodeId;
     private String nodeCode;
     private Boolean isMandatory;
@@ -22,13 +21,10 @@ public class Project {
     private String projectName;
     private int points;
     private int duration;
-
-    private String subjectLink;
-    private String accessAfter;
-    private String restartBefore;
+    private String executionConditions;
 
     @Column(columnDefinition = "TEXT")
-    private String projectDescription;
+    private String description;
 
     @Enumerated(EnumType.STRING)
     private EntityType entityType;
@@ -36,7 +32,14 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectType projectType;
 
-    @ToString.Exclude
+    @OneToMany
+    @JoinColumn(name = "parent_project_id")
+    private List<Project> nextProjects;
+
+    @OneToMany
+    @JoinColumn(name = "project_id")
+    private List<ProjectSkill> projectSkills;
+
     @OneToMany(mappedBy = "project")
     private List<UserProject> userProjectList;
 }
