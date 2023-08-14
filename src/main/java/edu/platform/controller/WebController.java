@@ -5,19 +5,20 @@ import edu.platform.service.ProjectService;
 import edu.platform.service.TelegramService;
 import edu.platform.service.UserProjectService;
 import edu.platform.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 public class WebController {
 
-    private UserService userService;
-    private UserProjectService userProjectService;
-    private ProjectService projectService;
-    private TelegramService telegramService;
+    private final UserService userService;
+    private final UserProjectService userProjectService;
+    private final ProjectService projectService;
+    private final TelegramService telegramService;
 
     @GetMapping("/stat")
     public ModelAndView getStatPage (@RequestParam(defaultValue = "") String campus) {
@@ -54,24 +55,4 @@ public class WebController {
         return telegramService.sendFormDataToAdmin(request);
     }
 
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-
-    @Autowired
-    public void setUserProjectService(UserProjectService userProjectService) {
-        this.userProjectService = userProjectService;
-    }
-
-    @Autowired
-    public void setProjectService(ProjectService projectService) {
-        this.projectService = projectService;
-    }
-
-    @Autowired
-    public void setTelegramService(TelegramService telegramService) {
-        this.telegramService = telegramService;
-    }
 }

@@ -1,14 +1,15 @@
 package edu.platform.parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.constants.EntityType;
 import edu.platform.constants.ProjectState;
 import edu.platform.models.*;
-import edu.platform.service.LoginService;
-import edu.platform.service.ProjectService;
-import edu.platform.service.UserProjectService;
-import edu.platform.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import edu.platform.service.*;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DefaultPropertiesPersister;
 
@@ -23,42 +24,24 @@ import java.util.function.Predicate;
 import static edu.platform.constants.GraphQLConstants.*;
 
 @Component
+@RequiredArgsConstructor
 public class Parser {
-
-
 
     private static final int SEARCH_LIMIT = 25;
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
     private static final String LAST_UPDATE_TIME = "task-update.time";
 
-    private UserService userService;
-    private ProjectService projectService;
-    private UserProjectService userProjectService;
-    private LoginService loginService;
+    private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-
-    @Autowired
-    public void setProjectService(ProjectService projectService) {
-        this.projectService = projectService;
-    }
-
-    @Autowired
-    public void setUserProjectService(UserProjectService userProjectService) {
-        this.userProjectService = userProjectService;
-    }
-
-    @Autowired
-    public void setLoginService(LoginService loginService) {
-        this.loginService = loginService;
-    }
+    private final UserService userService;
+    private final ProjectService projectService;
+    private final UserProjectService userProjectService;
+    private final AchievementService achievementService;
+    private final LoginService loginService;
 
     public void initUsers(Campus campus){
-        System.out.println("[parser initUsers] initUsers by login " + campus.getUserFullLogin());
+        LOG.info("Init users begin by login " + campus.getUserFullLogin());
 
         List<String> currentUsersList = userService.findUsersBySchoolId(campus.getSchoolId()).stream()
                 .map(User::getLogin).toList();
@@ -76,10 +59,37 @@ public class Parser {
             }
 
             setLastUpdateTime();
+            LOG.info("Init users end");
 
         } catch (IOException e) {
-            System.out.println("[parser initUsers] ERROR offset " + offset + " " + e.getMessage());
+            LOG.error("Parser error " + e.getMessage());
         }
+    }
+
+    private void parseNewUser(Campus campus, String login) {
+//        try {
+            User user = new User(login);
+            user.setCampus(campus);
+            setCredentials(user);
+            setPersonalInfo(user);
+
+            if (CORE_PROGRAM.equals(user.getEduForm())) {
+                setCoalitionInfo(user);
+                setStageInfo(user);
+                setXpHistory(user);
+                setAchievements(user);
+                userService.save(user);
+
+                setUserProjects(user);
+                setUserProjectsFromGraph(user);
+
+                System.out.println("[parseUser] user done " + login);
+            } else {
+                System.out.println("[parseUser] user skipped " + login);
+            }
+//        } catch (Exception e) {
+//            System.out.println("[parseUser] ERROR " + login + " " + e.getMessage());
+//        }
     }
 
     public void updateUsers(Campus campus) {
@@ -113,54 +123,34 @@ public class Parser {
         parseNewUser(campus, login);
     }
 
-    private void parseNewUser(Campus campus, String login) {
-        try {
-            User user = new User(login);
-            user.setCampus(campus);
-            setCredentials(user);
-            setPersonalInfo(user);
-
-            if (CORE_PROGRAM.equals(user.getEduForm())) {
-                setCoalitionInfo(user);
-                setStageInfo(user);
-                setXpHistory(user);
-                userService.save(user);
-
-                setUserProjects(user);
-                setUserProjectsFromGraph(user);
-
-                System.out.println("[parseUser] user done " + login);
-            } else {
-                System.out.println("[parseUser] user skipped " + login);
-            }
-        } catch (Exception e) {
-            System.out.println("[parseUser] ERROR " + login + " " + e.getMessage());
-        }
+    private void setCredentials(User user) throws JsonProcessingException {
+        JsonNode credentials = getResponseJson(user.getCampus(), RequestBody.getCredentialInfo(user));
+        userService.setCredentials(user, credentials);
     }
 
-    private void setCredentials(User user) throws IOException {
-        JsonNode response = sendRequest(user.getCampus(), RequestBody.getCredentialInfo(user));
-        userService.setCredentials(user, response);
+    private void setAchievements(User user) throws IOException {
+        JsonNode response = getResponseJson(user.getCampus(), RequestBody.getAchievements(user));
+
     }
 
     private void setPersonalInfo(User user) throws IOException {
-        userService.setPersonalInfo(user, sendRequest(user.getCampus(), RequestBody.getPersonalInfo(user)));
+        userService.setPersonalInfo(user, getResponseJson(user.getCampus(), RequestBody.getPersonalInfo(user)));
     }
 
     private void setCoalitionInfo(User user) throws IOException {
-        userService.setCoalitionInfo(user, sendRequest(user.getCampus(), RequestBody.getCoalitionInfo(user)));
+        userService.setCoalitionInfo(user, getResponseJson(user.getCampus(), RequestBody.getCoalitionInfo(user)));
     }
 
     private void setStageInfo(User user) throws IOException {
-        userService.setStageInfo(user, sendRequest(user.getCampus(), RequestBody.getStageInfo(user)));
+        userService.setStageInfo(user, getResponseJson(user.getCampus(), RequestBody.getStageInfo(user)));
     }
 
     private void setXpHistory(User user) throws IOException {
-        userService.setXpHistory(user, sendRequest(user.getCampus(), RequestBody.getXpHistory(user)));
+        userService.setXpHistory(user, getResponseJson(user.getCampus(), RequestBody.getXpHistory(user)));
     }
 
     private void setUserProjectsFromGraph(User user) throws IOException {
-        JsonNode graphInfo = sendRequest(user.getCampus(), RequestBody.getGraphInfo(user));
+        JsonNode graphInfo = getResponseJson(user.getCampus(), RequestBody.getGraphInfo(user));
         if (!graphInfo.isEmpty()) {
             JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
             for (JsonNode projectJson : projectsListJson) {
@@ -183,7 +173,7 @@ public class Parser {
     }
 
     private void setUserProjects(User user) throws IOException {
-        JsonNode userProjectInfo = sendRequest(user.getCampus(), RequestBody.getUserProjects(user));
+        JsonNode userProjectInfo = getResponseJson(user.getCampus(), RequestBody.getUserProjects(user));
         if (!userProjectInfo.isEmpty()) {
             JsonNode userProjectListJson = userProjectInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
             for (JsonNode userProjectJson : userProjectListJson) {
@@ -212,7 +202,7 @@ public class Parser {
             setCredentials(user);
         }
 
-        JsonNode graphInfo = sendRequest(campus, RequestBody.getGraphInfo(user));
+        JsonNode graphInfo = getResponseJson(campus, RequestBody.getGraphInfo(user));
 
         if (!graphInfo.isEmpty()) {
             JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
@@ -223,7 +213,7 @@ public class Parser {
 
     private List<String> getSearchResults(Campus campus, int offset) throws IOException {
         List<String> loginList = new ArrayList<>();
-        JsonNode searchInfo = sendRequest(campus, RequestBody.getSearchResults(SEARCH_LIMIT, offset));
+        JsonNode searchInfo = getResponseJson(campus, RequestBody.getSearchResults(SEARCH_LIMIT, offset));
         if (!searchInfo.isEmpty()) {
             JsonNode profiles = searchInfo.get(SCHOOL_21).get(SEARCH_BY_TEXT).get(PROFILES).get(PROFILES);
             for (JsonNode profile : profiles) {
@@ -232,12 +222,13 @@ public class Parser {
                 loginList.add(login);
             }
         }
-        System.out.println("[parser getSearchResults] ok, logins: " + loginList);
+        LOG.info("Search result: " + loginList);
         return loginList;
     }
 
-    private JsonNode sendRequest(Campus campus, String requestBody) throws IOException {
-        return loginService.sendRequest(campus, requestBody);
+    private JsonNode getResponseJson(Campus campus, String requestBody) throws JsonProcessingException {
+        String response = loginService.sendRequest(campus, requestBody);
+        return MAPPER.readTree(response).get(DATA);
     }
 
     public String getLastUpdateTime() {
@@ -268,8 +259,8 @@ public class Parser {
             DefaultPropertiesPersister p = new DefaultPropertiesPersister();
             p.store(props, new FileOutputStream(LAST_UPDATE_PROPERTIES_FILE), "parser last update time");
 
-        } catch (Exception e ) {
-            System.out.println("[PARSER] ERROR " + e.getMessage());
+        } catch (IOException e) {
+            LOG.error("Set last update time error " + e.getMessage());
         }
     }
 

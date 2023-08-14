@@ -2,14 +2,19 @@ package edu.platform.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.platform.models.Campus;
+import edu.platform.models.User;
 import edu.platform.parser.RequestBody;
 import edu.platform.repository.CampusRepository;
+import edu.platform.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+@RequiredArgsConstructor
 @Service
 public class CampusService {
     private static final String PROPERTY_CAMPUS_LIST = "campus.list";
@@ -22,12 +27,8 @@ public class CampusService {
     private static final String STUDENT_POSTFIX = "@student";
 
     private final CampusRepository campusRepository;
+    private final UserRepository userRepository;
     private final LoginService loginService;
-
-    public CampusService(CampusRepository campusRepository, LoginService loginService) {
-        this.campusRepository = campusRepository;
-        this.loginService = loginService;
-    }
 
     public List<Campus> getAll() {
         return campusRepository.findAll();

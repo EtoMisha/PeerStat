@@ -1,28 +1,20 @@
 package edu.platform.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.models.Campus;
-import edu.platform.models.User;
-import edu.platform.parser.RequestBody;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import static edu.platform.constants.GraphQLConstants.DATA;
 
 @Service
 public class LoginService {
@@ -30,16 +22,16 @@ public class LoginService {
     private static final String LOGIN_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[1]/div/input";
     private static final String PASSWORD_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[2]/div/input";
     private static final String BUTTON_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[3]/button";
-
-    private final ObjectMapper MAPPER = new ObjectMapper();
     private static final String AUTHORITY = "edu.21-school.ru";
     private static final String GRAPHQL_URL = "https://edu.21-school.ru/services/graphql";
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoginService.class);
 
     @Value("${parser.chrome-driver-path}")
     private String chromeDriverPath;
 
     public String getCookies(String login, String password) {
-        System.out.println("[getCookies] start login " + login);
+        LOG.info("Start login " + login);
 
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 
@@ -78,26 +70,29 @@ public class LoginService {
         } finally {
             driver.quit();
         }
-        System.out.println("[getCookies] done  " + cookiesStr);
+
+        LOG.info("Get cookies done " + cookiesStr);
         return cookiesStr;
     }
 
-    public JsonNode sendRequest(Campus campus, String requestBody) throws IOException {
+    public String sendRequest(Campus campus, String requestBody) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", campus.getCookie());
         headers.set("schoolId", campus.getSchoolId());
         headers.set("authority", AUTHORITY);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        String responseBody = "";
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
-        String responseStr = "";
         RestTemplate restTemplate = new RestTemplate();
-        try {
-            responseStr = restTemplate.postForObject(GRAPHQL_URL, request, String.class);
-        } catch (RestClientException e) {
-            System.out.println("[PARSER] ERROR " + e.getMessage());
+        ResponseEntity<String> response = restTemplate.exchange(GRAPHQL_URL, HttpMethod.GET, request, String.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            responseBody = response.getBody();
+        } else {
+            LOG.error("Response code " + response.getStatusCode());
         }
-        return MAPPER.readTree(responseStr).get(DATA);
+
+        return responseBody;
     }
 
 }

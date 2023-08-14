@@ -10,6 +10,7 @@ import edu.platform.constants.EntityType;
 import edu.platform.constants.ProjectType;
 import edu.platform.models.Project;
 import edu.platform.repository.ProjectRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,21 +21,12 @@ import java.util.Optional;
 import static edu.platform.constants.GraphQLConstants.*;
 import static edu.platform.constants.GraphQLConstants.COURSE_ID;
 
+@RequiredArgsConstructor
 @Service
 public class ProjectService {
 
-    private ProjectRepository projectRepository;
-    private ProjectMapper projectMapper;
-
-    @Autowired
-    public void setProjectRepository(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
-    }
-
-    @Autowired
-    public void setProjectMapper(ProjectMapper projectMapper) {
-        this.projectMapper = projectMapper;
-    }
+    private final ProjectRepository projectRepository;
+    private final ProjectMapper projectMapper;
 
     public Optional<Project> findById(Long id) {
         return projectRepository.findById(id);

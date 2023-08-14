@@ -77,20 +77,6 @@ public class RequestBody {
                 """, user.getUserId());
     }
 
-    public static String getAchievements(User user){
-        return String.format("""
-                {
-                  "operationName": "publicProfileLoadAverageLogtime",
-                  "variables": {
-                    "login": "%s@student.21-school.ru",
-                    "schoolID": "%s",
-                    "date": "%s"
-                  },
-                  "query": "query publicProfileLoadAverageLogtime($login: String!, $schoolID: UUID!, $date: Date!) {\\n  school21 {\\n    loadAverageLogtime(login: $login, schoolID: $schoolID, date: $date) {\\n      week\\n      month\\n      weekPerMonth\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
-                }
-                """, user.getLogin(), user.getCampus().getSchoolId(), LocalDate.now());
-    }
-
     public static String getLogTime(User user) {
         return String.format("""
                 {
@@ -187,6 +173,18 @@ public class RequestBody {
                   "query": "query getCampusPlanOccupied($clusterId: ID!) {\\n  student {\\n    getClusterPlanStudentsByClusterId(clusterId: $clusterId) {\\n      occupiedPlaces {\\n        row\\n        number\\n        stageGroupName\\n        stageName\\n        user {\\n          id\\n          login\\n          avatarUrl\\n          __typename\\n        }\\n        experience {\\n          id\\n          value\\n          level {\\n            id\\n            range {\\n              id\\n              levelCode\\n              leftBorder\\n              rightBorder\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        studentType\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
                 """, clusterId);
+    }
+
+    public static String getAchievements(User user) {
+        return String.format("""
+                {
+                  "operationName": "publicProfileGetAchievements",
+                  "variables": {
+                    "userId": "%s"
+                  },
+                  "query": "query publicProfileGetAchievements($userId: UUID!) {\\n  student         {\\n    getBadgesPublicProfile(userId: $userId)         {\\n      points\\n      id\\n      badge         {\\n        id\\n        name\\n        avatarUrl\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
+                }
+                """, user.getUserId());
     }
 
 }

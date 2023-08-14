@@ -7,8 +7,8 @@ import edu.platform.models.Project;
 import edu.platform.constants.ProjectState;
 import edu.platform.models.User;
 import edu.platform.connections.UserProject;
-import edu.platform.connections.UserProjectKey;
 import edu.platform.repository.UserProjectRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +17,13 @@ import java.util.stream.Collectors;
 
 import static edu.platform.constants.GraphQLConstants.*;
 
+@RequiredArgsConstructor
 @Service
 public class UserProjectService {
 
-    private UserProjectRepository userProjectRepository;
-    private UserProjectMapper userProjectMapper;
-    private LoginService loginService;
+    private final UserProjectRepository userProjectRepository;
+    private final UserProjectMapper userProjectMapper;
+    private final LoginService loginService;
 
     private static final List<ProjectState> ACTIVE_PROJECT_STATES = List.of(
             ProjectState.FAILED,
@@ -32,21 +33,6 @@ public class UserProjectService {
             ProjectState.READY_TO_START,
             ProjectState.P2P_EVALUATIONS
     );
-
-    @Autowired
-    public void setUserProjectRepository(UserProjectRepository userProjectRepository) {
-        this.userProjectRepository = userProjectRepository;
-    }
-
-    @Autowired
-    public void setUserProjectMapper(UserProjectMapper userProjectMapper) {
-        this.userProjectMapper = userProjectMapper;
-    }
-
-    @Autowired
-    public void setLoginService(LoginService loginService) {
-        this.loginService = loginService;
-    }
 
     public List<String> getCurrentUserProjects(User user) {
         return userProjectRepository.findByUser(user).stream()
