@@ -18,8 +18,6 @@ public interface UserRepository extends PagingAndSortingRepository<User, String>
     void save(User user);
 
 
-    Page<User> findUsersByCampusId(Long campusId, Pageable pageable);
-    List<User> findByCampusId(Long campusId);
 
 //    User findUserByLogin(String login);
 //    List<User> findUsersByCampusSchoolId(String schoolId);

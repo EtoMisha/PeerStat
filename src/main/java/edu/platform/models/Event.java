@@ -11,10 +11,14 @@ import java.time.LocalDateTime;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private LocalDateTime start;
-    private LocalDateTime end;
+
+    @Column(columnDefinition = "TIMESTAMP")
+    private LocalDateTime startTime;
+
+    @Column(columnDefinition = "TIMESTAMP")
+    private LocalDateTime endTime;
+
     private String type;
     private String title;
     private String description;

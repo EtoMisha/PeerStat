@@ -35,12 +35,14 @@ public interface GraphQLConstants {
     // Achievement
     String PATH_ACHIEVEMENTS = "/student/getBadgesPublicProfile";
     String BADGE = "badge";
+    String ID = "id";
     String NAME = "name";
     String AVATAR_URL = "avatarUrl";
     String POINTS = "points";
 
     // Skill
     String PATH_SKILLS = "/school21/getSoftSkillsByStudentId";
+    String CODE = "code";
     String TYPE = "type";
     String TOTAL_POWER = "totalPower";
 

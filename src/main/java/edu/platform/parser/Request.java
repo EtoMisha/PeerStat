@@ -139,7 +139,7 @@ public class Request {
                 """, user.getStudentId());
     }
 
-    public static String getProjectInfo(int goalId) {
+    public static String getProjectInfo(Long goalId) {
         return String.format("""
                 {
                   "operationName": "getProjectInfo",

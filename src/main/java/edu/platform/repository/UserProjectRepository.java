@@ -12,7 +12,6 @@ import java.util.Optional;
 @Repository
 public interface UserProjectRepository extends CrudRepository<UserProject, Long> {
 
-    List<UserProject> findByProjectId(Long projectId);
     List<UserProject> findByUser(User user);
     Optional<UserProject> findByUserAndProject(User user, Project project);
 }

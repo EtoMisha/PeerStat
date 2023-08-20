@@ -76,8 +76,12 @@ public class Parser {
     private void parseNewUser(Campus campus, String login) {
         try {
             User user = userService.create(campus, login);
+            System.out.println("Before credentials user " + user);
+            System.out.println("Before credentials request " + Request.getCredentialInfo(user));
             userService.setCredentials(user, getResponse(campus, Request.getCredentialInfo(user)));
+            LOG.info("-- setCredentials ok");
             userService.setPersonalInfo(user, getResponse(campus, Request.getPersonalInfo(user)));
+            LOG.info("-- setPersonalInfo ok");
 
             if (CORE_PROGRAM.equals(user.getEduForm())) {
                 userService.save(user);
@@ -98,8 +102,8 @@ public class Parser {
         }
     }
 
-    public void testInit(Campus campus){
-        LOG.info("Test Init campus " + campus.getName());
+    public void testInit(Campus campus) {
+        LOG.info("Test Init campus " + campus);
 
         String login = campus.getUserLogin();
         parseNewUser(campus, login);
@@ -165,6 +169,7 @@ public class Parser {
 
     public void parseGraphInfo(Campus campus) throws IOException {
         LOG.info("Parse graph begin");
+        LOG.info("Campus " + campus);
 
         String userLogin = campus.getUserLogin();
         Optional<User> userOpt = userService.findByLogin(userLogin);
@@ -176,6 +181,7 @@ public class Parser {
             parseNewUser(campus, campus.getUserLogin());
         }
 
+        LOG.info("user before get graph " + user);
         projectService.updateGraph(getResponse(campus, Request.getGraphInfo(user)));
 
         LOG.info("Parse graph done");
@@ -249,7 +255,8 @@ public class Parser {
     }
 
     public void updateCookies(Campus campus) {
-        String cookies = cookiesGrabber.getCookies(campus.getUserLogin(), campus.getUserPassword());
+//        String cookies = cookiesGrabber.getCookies(campus.getUserLogin(), campus.getUserPassword());
+        String cookies = "_ym_uid=1692288945576653183; _ym_d=1692288945; _gcl_au=1.1.319061563.1692288945; iap.uid=05bd1eb6e2564f95825bd96ae1d280f6; tmr_lvid=65f6fdb3f0916961dcb766239dfefbc5; tmr_lvidTS=1692288945360; _tt_enable_cookie=1; _ttp=97MW6hoYBzWPkUYNYY8kpPk1WZU; adrcid=Aq8jFotcAhm8gugm-su67Cg; _ga=GA1.1.897720265.1692288945; _ga_TR6E0P9RCL=GS1.1.1692301080.4.0.1692301080.0.0.0; SI=6480b6ba-4f44-4af9-b77c-ab748625ee91; localeCode=en_EN; _ga_94PX1KP3QL=GS1.1.1692540698.3.1.1692542887.0.0.0; tokenId=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5V29landCTmxROWtQVEpFZnFpVzRrc181Mk1KTWkwUHl2RHNKNlgzdlFZIn0.eyJleHAiOjE2OTI1NzY2OTgsImlhdCI6MTY5MjU0Mjg4NywiYXV0aF90aW1lIjoxNjkyNTQwNjk4LCJqdGkiOiI0ZjdmZTlhNy1lN2M2LTQ5NWQtYmI1Yy1mYzE0ZWZmMGE1NzEiLCJpc3MiOiJodHRwczovL2F1dGguc2JlcmNsYXNzLnJ1L2F1dGgvcmVhbG1zL0VkdVBvd2VyS2V5Y2xvYWsiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMDhjMjY0MTgtOGY5NS00N2Y4LWIwZTEtNmM5ZWVjZWI3NDY5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2Nob29sMjEiLCJub25jZSI6IjJmMDQyNzk2LWExYTctNDBjOC04NzhjLTlkZGViOGQ5YWQ0ZiIsInNlc3Npb25fc3RhdGUiOiIwYjA3ZTdhYS1lYWI2LTQyNjAtOTRmYy1lYzE0ZGJjMDdiODQiLCJhY3IiOiIwIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vZWR1LjIxLXNjaG9vbC5ydSIsImh0dHBzOi8vZWR1LWFkbWluLjIxLXNjaG9vbC5ydSJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1lZHVwb3dlcmtleWNsb2FrIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwidXNlcl9pZCI6ImI1NjkzZjhlLTQxOGUtNDg3ZC05MmIxLTI2OGFlMmM1ODQ1ZiIsIm5hbWUiOiJGZXJuYW5kYSBCZWF0cmlzIiwiYXV0aF90eXBlX2NvZGUiOiJkZWZhdWx0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoiZmJlYXRyaXNAc3R1ZGVudC4yMS1zY2hvb2wucnUiLCJnaXZlbl9uYW1lIjoiRmVybmFuZGEiLCJmYW1pbHlfbmFtZSI6IkJlYXRyaXMiLCJlbWFpbCI6ImZiZWF0cmlzQHN0dWRlbnQuMjEtc2Nob29sLnJ1In0.Qb_cGXwRif0cYQVrE2T_-hyT1-qlpiT0uqPRQtslsvk45gu3tHUV16ehuNevUHOBqGBKr_M_v-6tPkavNfM5C_zmqyyADF1PrdsS9weMwAApSQ38AQt7D_w4VsTgnAMg9j7bIGmA3BlWmCMkViz68YmaNXOl4bKPW9sux8Ee804DDiR2zQEA1PQsNeUh6IJ_OrcP5s4oA1lIX-_V1BX72WW9iCloCsbTKnOcU342Pns1nL0T_lBz9NH7hZv2OUzLIWMJq3So32C5fULr9MjARiMKllNVnNYmy2ITn_tmJgRH2vaUloNwb5FertnrpHQXqSVpLDKV9shhVY-p30ifew";
         campusService.setCookies(campus, cookies);
     }
 

@@ -12,10 +12,9 @@ import java.util.List;
 public class User {
 
     @Id
-    private String login;
-
     private String userId;
     private String studentId;
+    private String login;
     private String email;
 
     private int level;

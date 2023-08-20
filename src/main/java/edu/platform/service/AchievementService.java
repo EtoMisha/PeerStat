@@ -33,14 +33,15 @@ public class AchievementService {
         }
 
         Map<String, String> achievementMap = MAPPER.convertValue(achievementJson.at(BADGE), TYPE_REFERENCE_STRING_MAP);
+        Long id = Long.parseLong(achievementMap.get(ID));
         String name = achievementMap.get(NAME);
         String avatarUrl = achievementMap.get(AVATAR_URL);
-        Optional<Achievement> achievementOpt = achievementRepository.findByName(name);
+        Optional<Achievement> achievementOpt = achievementRepository.findById(id);
 
-        return achievementOpt.orElseGet(() -> create(name, avatarUrl));
+        return achievementOpt.orElseGet(() -> create(id, name, avatarUrl));
     }
 
-    public Achievement create(String name, String avatarUrl) {
+    public Achievement create(Long id, String name, String avatarUrl) {
         Achievement achievement = new Achievement();
         achievement.setName(name);
         achievement.setAvatarUrl(avatarUrl);

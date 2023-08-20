@@ -59,8 +59,8 @@ public class UserService {
 
         Map<String, String> credentialsMap = MAPPER.convertValue(credentialsJson.at(PATH_STUDENT), TYPE_REFERENCE_STRING_MAP);
 
-        user.setStudentId(credentialsMap.get(STUDENT_ID));
         user.setUserId(credentialsMap.get(USER_ID));
+        user.setStudentId(credentialsMap.get(STUDENT_ID));
 
         UserStatus status;
         if (Boolean.parseBoolean(credentialsMap.get(IS_GRADUATE))) {

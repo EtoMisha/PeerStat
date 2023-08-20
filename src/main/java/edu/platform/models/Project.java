@@ -13,9 +13,7 @@ import java.util.List;
 public class Project {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private int entityId;
+    private Long entityId;
     private int nodeId;
     private String nodeCode;
     private Boolean isMandatory;

@@ -34,7 +34,7 @@ public class ProjectService {
 
     private void createOrUpdate(JsonNode projectJson) {
         Project project = new Project();
-        project.setEntityId(projectJson.get(ENTITY_ID).asInt());
+        project.setEntityId(projectJson.get(ENTITY_ID).asLong());
         project.setNodeId(projectJson.get(GRAPH_NODE_ID).asInt());
         project.setNodeCode(projectJson.get(NODE_CODE).asText());
 
@@ -73,7 +73,7 @@ public class ProjectService {
 
     private Project create(JsonNode projectJson) {
         Project project = new Project();
-        project.setEntityId(projectJson.get(GOAL_ID).asInt());
+        project.setEntityId(projectJson.get(GOAL_ID).asLong());
         project.setProjectName(projectJson.get(NAME).asText());
         projectRepository.save(project);
         return project;

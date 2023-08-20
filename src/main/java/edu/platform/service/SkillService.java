@@ -25,14 +25,16 @@ public class SkillService {
             return null;
         }
 
+        String id = skillJson.get(GraphQLConstants.CODE).asText();
         String name = skillJson.get(GraphQLConstants.TYPE).asText();
         Optional<Skill> skillOpt = skillRepository.findByName(name);
 
-        return skillOpt.orElseGet(() -> create(name));
+        return skillOpt.orElseGet(() -> create(id, name));
     }
 
-    public Skill create(String name) {
+    public Skill create(String id, String name) {
         Skill skill = new Skill();
+        skill.setId(id);
         skill.setName(name);
         skillRepository.save(skill);
 
