@@ -1,6 +1,5 @@
-package edu.platform.service;
+package edu.platform.parser;
 
-import edu.platform.models.Campus;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
@@ -9,23 +8,19 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class LoginService {
+public class CookiesGrabber {
     private static final String URL = "https://edu.21-school.ru/";
     private static final String LOGIN_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[1]/div/input";
     private static final String PASSWORD_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[2]/div/input";
     private static final String BUTTON_XPATH = "/html/body/div/div/div/div[2]/div/div/form/div[3]/button";
-    private static final String AUTHORITY = "edu.21-school.ru";
-    private static final String GRAPHQL_URL = "https://edu.21-school.ru/services/graphql";
 
-    private static final Logger LOG = LoggerFactory.getLogger(LoginService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CookiesGrabber.class);
 
     @Value("${parser.chrome-driver-path}")
     private String chromeDriverPath;
@@ -73,26 +68,6 @@ public class LoginService {
 
         LOG.info("Get cookies done " + cookiesStr);
         return cookiesStr;
-    }
-
-    public String sendRequest(Campus campus, String requestBody) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Cookie", campus.getCookie());
-        headers.set("schoolId", campus.getSchoolId());
-        headers.set("authority", AUTHORITY);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        String responseBody = "";
-        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(GRAPHQL_URL, HttpMethod.GET, request, String.class);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            responseBody = response.getBody();
-        } else {
-            LOG.error("Response code " + response.getStatusCode());
-        }
-
-        return responseBody;
     }
 
 }

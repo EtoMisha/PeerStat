@@ -8,7 +8,10 @@ import lombok.Data;
 @Entity
 @Table(name = "workplaces")
 public class Workplace {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String row;
     private String number;
 

@@ -1,12 +1,9 @@
 package edu.platform.models;
 
-import edu.platform.connections.ProjectSkill;
-import edu.platform.connections.UserProject;
 import edu.platform.constants.EntityType;
 import edu.platform.constants.ProjectType;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.List;
 
@@ -16,7 +13,9 @@ import java.util.List;
 public class Project {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private int entityId;
     private int nodeId;
     private String nodeCode;
     private Boolean isMandatory;
@@ -27,7 +26,7 @@ public class Project {
     private String executionConditions;
 
     @Column(columnDefinition = "TEXT")
-    private String projectDescription;
+    private String description;
 
     @Enumerated(EnumType.STRING)
     private EntityType entityType;

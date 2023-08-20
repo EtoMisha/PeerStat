@@ -1,4 +1,4 @@
-package edu.platform.connections;
+package edu.platform.models;
 
 import edu.platform.models.Skill;
 import jakarta.persistence.*;
@@ -10,6 +10,7 @@ import lombok.Data;
 public class ProjectSkill {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private int points;
 

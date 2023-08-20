@@ -1,8 +1,6 @@
 package edu.platform.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -13,7 +11,11 @@ import java.time.LocalDate;
 public class XpGain {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate date;
     private int points;
+
+    @ManyToOne
+    private User user;
 }

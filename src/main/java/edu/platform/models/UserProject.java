@@ -1,4 +1,4 @@
-package edu.platform.connections;
+package edu.platform.models;
 
 import edu.platform.constants.ProjectState;
 import edu.platform.models.Project;
@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class UserProject {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private int score;

@@ -1,16 +1,21 @@
 package edu.platform.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "feedbacks")
+@Table(name = "user_feedbacks")
 public class Feedback {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String category;
+    private double punctual;
+    private double interested;
+    private double rigorous;
+    private double courteous;
+
+    @OneToOne
+    private User user;
 }

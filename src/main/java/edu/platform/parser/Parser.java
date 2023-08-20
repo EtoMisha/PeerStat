@@ -3,15 +3,19 @@ package edu.platform.parser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.platform.constants.EntityType;
-import edu.platform.constants.ProjectState;
 import edu.platform.models.*;
-import edu.platform.service.*;
+import edu.platform.service.CampusService;
+import edu.platform.service.ProjectService;
+import edu.platform.service.UserService;
+import edu.platform.service.UserProjectService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DefaultPropertiesPersister;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,22 +32,25 @@ import static edu.platform.constants.GraphQLConstants.*;
 public class Parser {
 
     private static final int SEARCH_LIMIT = 25;
+    private static final String AUTHORITY = "edu.21-school.ru";
+    private static final String GRAPHQL_URL = "https://edu.21-school.ru/services/graphql";
+
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
     private static final String LAST_UPDATE_TIME = "task-update.time";
 
     private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private final CampusService campusService;
     private final UserService userService;
     private final ProjectService projectService;
     private final UserProjectService userProjectService;
-    private final AchievementService achievementService;
-    private final LoginService loginService;
+    private final CookiesGrabber cookiesGrabber;
 
-    public void initUsers(Campus campus){
+    public void initUsers(Campus campus) {
         LOG.info("Init users begin by login " + campus.getUserFullLogin());
 
-        List<String> currentUsersList = userService.findUsersBySchoolId(campus.getSchoolId()).stream()
+        List<String> currentUsersList = userService.findUsersByCampus(campus).stream()
                 .map(User::getLogin).toList();
 
         int offset = 0;
@@ -67,168 +74,127 @@ public class Parser {
     }
 
     private void parseNewUser(Campus campus, String login) {
-//        try {
-            User user = new User(login);
-            user.setCampus(campus);
-            setCredentials(user);
-            setPersonalInfo(user);
+        try {
+            User user = userService.create(campus, login);
+            userService.setCredentials(user, getResponse(campus, Request.getCredentialInfo(user)));
+            userService.setPersonalInfo(user, getResponse(campus, Request.getPersonalInfo(user)));
 
             if (CORE_PROGRAM.equals(user.getEduForm())) {
-                setCoalitionInfo(user);
-                setStageInfo(user);
-                setXpHistory(user);
-                setAchievements(user);
                 userService.save(user);
-
-                setUserProjects(user);
-                setUserProjectsFromGraph(user);
-
-                System.out.println("[parseUser] user done " + login);
             } else {
-                System.out.println("[parseUser] user skipped " + login);
+                LOG.info("User skipped " + login);
+                return;
             }
-//        } catch (Exception e) {
-//            System.out.println("[parseUser] ERROR " + login + " " + e.getMessage());
-//        }
-    }
 
-    public void updateUsers(Campus campus) {
-        System.out.println("[parser updateUsers] updateUsers by login " + campus.getUserFullLogin());
+            userService.setIntensive(user, getResponse(campus, Request.getStageInfo(user)));
+            userService.setCoalition(user, getResponse(campus, Request.getCredentialInfo(user)));
 
-        List<User> usersList = userService.findUsersBySchoolId(campus.getSchoolId());
-        for (User user : usersList) {
-            try {
-                setCredentials(user);
-                setPersonalInfo(user);
-                setXpHistory(user);
-                userService.save(user);
+            updateDynamicUserData(user);
 
-                setUserProjects(user);
-                setUserProjectsFromGraph(user);
+            LOG.info("User done " + login);
 
-//                System.out.println("[parser updateUsers] user " + user.getLogin() + " ok");
-            } catch (Exception e) {
-                System.out.println("[parser updateUsers] ERROR " + user.getLogin() + " " + e.getMessage());
-            }
+        } catch (Exception e) {
+            LOG.error("Parse new user error " + login + " " + e.getMessage());
         }
-
-        System.out.println("[parser updateUsers] done " + LocalDateTime.now());
-        setLastUpdateTime();
     }
 
     public void testInit(Campus campus){
-        System.out.println("[parser testInit] testInit by login " + campus.getUserFullLogin());
+        LOG.info("Test Init campus " + campus.getName());
 
         String login = campus.getUserLogin();
         parseNewUser(campus, login);
     }
 
-    private void setCredentials(User user) throws JsonProcessingException {
-        JsonNode credentials = getResponseJson(user.getCampus(), RequestBody.getCredentialInfo(user));
-        userService.setCredentials(user, credentials);
+    public void updateUsers(Campus campus) {
+        LOG.info("Update users, campus " + campus.getName());
+
+        userService.findUsersByCampus(campus).forEach(this::updateDynamicUserData);
+
+        LOG.info("Update users done " + LocalDateTime.now());
+        setLastUpdateTime();
     }
 
-    private void setAchievements(User user) throws IOException {
-        JsonNode response = getResponseJson(user.getCampus(), RequestBody.getAchievements(user));
+    private void updateDynamicUserData(User user) {
+        Campus campus = user.getCampus();
+        try {
+            userService.setAchievements(user, getResponse(campus, Request.getAchievements(user)));
+            userService.setSkills(user, getResponse(campus, Request.getUserSkills(user)));
+            userService.setXpGains(user, getResponse(campus, Request.getXpGains(user)));
+            userService.setProjects(user, getResponse(campus, Request.getUserProjects(user)));
 
-    }
+            userService.save(user);
 
-    private void setPersonalInfo(User user) throws IOException {
-        userService.setPersonalInfo(user, getResponseJson(user.getCampus(), RequestBody.getPersonalInfo(user)));
-    }
-
-    private void setCoalitionInfo(User user) throws IOException {
-        userService.setCoalitionInfo(user, getResponseJson(user.getCampus(), RequestBody.getCoalitionInfo(user)));
-    }
-
-    private void setStageInfo(User user) throws IOException {
-        userService.setStageInfo(user, getResponseJson(user.getCampus(), RequestBody.getStageInfo(user)));
-    }
-
-    private void setXpHistory(User user) throws IOException {
-        userService.setXpHistory(user, getResponseJson(user.getCampus(), RequestBody.getXpHistory(user)));
-    }
-
-    private void setUserProjectsFromGraph(User user) throws IOException {
-        JsonNode graphInfo = getResponseJson(user.getCampus(), RequestBody.getGraphInfo(user));
-        if (!graphInfo.isEmpty()) {
-            JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
-            for (JsonNode projectJson : projectsListJson) {
-                EntityType entityType = EntityType.valueOf(projectJson.get(ENTITY_TYPE).asText());
-                if (entityType.equals(EntityType.COURSE)) {
-                    String stateStr = projectJson.get(COURSE).get(PROJECT_STATE).asText();
-                    ProjectState projectState = stateStr == null ? null : ProjectState.valueOf(stateStr);
-                    if (projectState != null && !ProjectState.LOCKED.equals(projectState)) {
-                        Long projectId = projectJson.get(ENTITY_ID).asLong();
-                        Optional<Project> projectOpt = projectService.findById(projectId);
-                        if (projectOpt.isPresent() ) {
-                            userProjectService.createAndSaveCourse(user, projectOpt.get(), projectJson.get(COURSE));
-                        } else {
-                            System.out.println("[PARSER] ERROR Project not found, id" + projectId);
-                        }
-                    }
-                }
-            }
+        } catch (Exception e) {
+            LOG.error("Update user error " + user.getLogin() + " " + e.getMessage());
         }
     }
 
-    private void setUserProjects(User user) throws IOException {
-        JsonNode userProjectInfo = getResponseJson(user.getCampus(), RequestBody.getUserProjects(user));
-        if (!userProjectInfo.isEmpty()) {
-            JsonNode userProjectListJson = userProjectInfo.get(SCHOOL_21).get(STUDENT_PROJECT);
-            for (JsonNode userProjectJson : userProjectListJson) {
-                ProjectState projectState = ProjectState.valueOf(userProjectJson.get(GOAL_STATUS).asText());
-                if (!ProjectState.UNAVAILABLE.equals(projectState)) {
-                    Long projectId = Long.parseLong(userProjectJson.get(GOAL_ID).asText());
-                    Optional<Project> projectOpt = projectService.findById(projectId);
-                    if (projectOpt.isPresent()) {
-                        userProjectService.createAndSaveGoal(user, projectOpt.get(), userProjectJson);
-                    } else {
-                        System.out.println("[PARSER] ERROR Project not found, id" + projectId);
-                    }
-                }
-            }
+    public void updateProjects(Campus campus, Project project) {
+        try {
+            JsonNode projectInfoJson = getResponse(campus, Request.getProjectInfo(project.getEntityId()));
+            projectService.updateProjectInfo(project, projectInfoJson);
+        } catch (JsonProcessingException e) {
+            LOG.error("Update project error " + e.getMessage());
         }
     }
+
+//    private void setUserProjectsFromGraph(User user) throws IOException {
+//        JsonNode graphInfo = getResponse(user.getCampus(), Request.getGraphInfo(user));
+//        if (!graphInfo.isEmpty()) {
+//            JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
+//            for (JsonNode projectJson : projectsListJson) {
+//                EntityType entityType = EntityType.valueOf(projectJson.get(ENTITY_TYPE).asText());
+//                if (entityType.equals(EntityType.COURSE)) {
+//                    String stateStr = projectJson.get(COURSE).get(PROJECT_STATE).asText();
+//                    ProjectState projectState = stateStr == null ? null : ProjectState.valueOf(stateStr);
+//                    if (projectState != null && !ProjectState.LOCKED.equals(projectState)) {
+//                        Long projectId = projectJson.get(ENTITY_ID).asLong();
+//                        Optional<Project> projectOpt = projectService.findById(projectId);
+//                        if (projectOpt.isPresent() ) {
+//                            userProjectService.createAndSaveCourse(user, projectOpt.get(), projectJson.get(COURSE));
+//                        } else {
+//                            System.out.println("[PARSER] ERROR Project not found, id" + projectId);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//
 
     public void parseGraphInfo(Campus campus) throws IOException {
-        System.out.println("[parser parseGraphInfo] begin");
+        LOG.info("Parse graph begin");
 
         String userLogin = campus.getUserLogin();
-        User user = userService.findUserByLogin(userLogin);
-        if (user == null) {
-            user = new User(userLogin);
-            user.setCampus(campus);
-            setCredentials(user);
+        Optional<User> userOpt = userService.findByLogin(userLogin);
+        User user;
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+        } else {
+            user = userService.create(campus, campus.getUserLogin());
+            parseNewUser(campus, campus.getUserLogin());
         }
 
-        JsonNode graphInfo = getResponseJson(campus, RequestBody.getGraphInfo(user));
+        projectService.updateGraph(getResponse(campus, Request.getGraphInfo(user)));
 
-        if (!graphInfo.isEmpty()) {
-            JsonNode projectsListJson = graphInfo.get(STUDENT).get(BASIC_GRAPH).get(GRAPH_NODES);
-            projectsListJson.forEach(projectJson -> projectService.save(projectJson));
-        }
-        System.out.println("[parser parseGraphInfo] done");
+        LOG.info("Parse graph done");
     }
 
     private List<String> getSearchResults(Campus campus, int offset) throws IOException {
         List<String> loginList = new ArrayList<>();
-        JsonNode searchInfo = getResponseJson(campus, RequestBody.getSearchResults(SEARCH_LIMIT, offset));
+        JsonNode searchInfo = getResponse(campus, Request.getSearchResults(SEARCH_LIMIT, offset));
         if (!searchInfo.isEmpty()) {
-            JsonNode profiles = searchInfo.get(SCHOOL_21).get(SEARCH_BY_TEXT).get(PROFILES).get(PROFILES);
+            JsonNode profiles = searchInfo.at(PATH_SEARCH_RESULT);
             for (JsonNode profile : profiles) {
                 String fullLogin = profile.get(LOGIN).asText();
                 String login = fullLogin.contains("@") ? fullLogin.substring(0, fullLogin.indexOf("@")) : fullLogin;
                 loginList.add(login);
             }
         }
+
         LOG.info("Search result: " + loginList);
         return loginList;
-    }
-
-    private JsonNode getResponseJson(Campus campus, String requestBody) throws JsonProcessingException {
-        String response = loginService.sendRequest(campus, requestBody);
-        return MAPPER.readTree(response).get(DATA);
     }
 
     public String getLastUpdateTime() {
@@ -242,7 +208,7 @@ public class Parser {
             lastUpdateTime = props.getProperty(LAST_UPDATE_TIME);
 
         } catch (IOException e) {
-            System.out.println("[PARSER] ERROR " + e.getMessage());
+            LOG.error("Get last update time error " + e.getMessage());
         }
 
         return lastUpdateTime;
@@ -262,6 +228,33 @@ public class Parser {
         } catch (IOException e) {
             LOG.error("Set last update time error " + e.getMessage());
         }
+    }
+
+    private JsonNode getResponse(Campus campus, String requestBody) throws JsonProcessingException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", campus.getCookie());
+        headers.set("schoolId", campus.getSchoolId());
+        headers.set("authority", AUTHORITY);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(GRAPHQL_URL, HttpMethod.GET, request, String.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return MAPPER.readTree(response.getBody()).get(DATA);
+        } else {
+            LOG.error("Response code " + response.getStatusCode());
+            throw new ResponseStatusException(response.getStatusCode());
+        }
+    }
+
+    public void updateCookies(Campus campus) {
+        String cookies = cookiesGrabber.getCookies(campus.getUserLogin(), campus.getUserPassword());
+        campusService.setCookies(campus, cookies);
+    }
+
+    public void updateWorkplaces(Campus campus) {
+        //TODO
     }
 
 }

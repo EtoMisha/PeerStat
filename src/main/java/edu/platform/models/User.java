@@ -1,8 +1,5 @@
 package edu.platform.models;
 
-import edu.platform.connections.UserAchievement;
-import edu.platform.connections.UserFeedback;
-import edu.platform.connections.UserProject;
 import edu.platform.constants.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -57,21 +54,16 @@ public class User {
     @OneToOne
     private Workplace workplace;
 
+    @OneToOne
+    private Feedback feedbacks;
+
     @OneToMany
     @JoinColumn(name = "user_id")
     private List<UserAchievement> achievements;
 
     @OneToMany
     @JoinColumn(name = "user_id")
-    private List<UserFeedback> userFeedbacks;
-
-    @OneToMany
-    @JoinColumn(name = "user_id")
     private List<XpGain> xpGains;
-
-    public User(String login) {
-        this.login = login;
-    }
 
     public User() {}
 }
