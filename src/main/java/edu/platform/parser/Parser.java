@@ -76,8 +76,6 @@ public class Parser {
     private void parseNewUser(Campus campus, String login) {
         try {
             User user = userService.create(campus, login);
-            System.out.println("Before credentials user " + user);
-            System.out.println("Before credentials request " + Request.getCredentialInfo(user));
             userService.setCredentials(user, getResponse(campus, Request.getCredentialInfo(user)));
             LOG.info("-- setCredentials ok");
             userService.setPersonalInfo(user, getResponse(campus, Request.getPersonalInfo(user)));
@@ -91,7 +89,9 @@ public class Parser {
             }
 
             userService.setIntensive(user, getResponse(campus, Request.getStageInfo(user)));
+            LOG.info("-- setIntensive ok");
             userService.setCoalition(user, getResponse(campus, Request.getCredentialInfo(user)));
+            LOG.info("-- setCoalition ok");
 
             updateDynamicUserData(user);
 
@@ -103,7 +103,7 @@ public class Parser {
     }
 
     public void testInit(Campus campus) {
-        LOG.info("Test Init campus " + campus);
+        LOG.info("Test Init campus " + campus.getName());
 
         String login = campus.getUserLogin();
         parseNewUser(campus, login);
@@ -122,9 +122,13 @@ public class Parser {
         Campus campus = user.getCampus();
         try {
             userService.setAchievements(user, getResponse(campus, Request.getAchievements(user)));
+            LOG.info("-- setAchievements ok");
             userService.setSkills(user, getResponse(campus, Request.getUserSkills(user)));
+            LOG.info("-- setSkills ok");
             userService.setXpGains(user, getResponse(campus, Request.getXpGains(user)));
+            LOG.info("-- setXpGains ok");
             userService.setProjects(user, getResponse(campus, Request.getUserProjects(user)));
+            LOG.info("-- setProjects ok");
 
             userService.save(user);
 
@@ -169,7 +173,6 @@ public class Parser {
 
     public void parseGraphInfo(Campus campus) throws IOException {
         LOG.info("Parse graph begin");
-        LOG.info("Campus " + campus);
 
         String userLogin = campus.getUserLogin();
         Optional<User> userOpt = userService.findByLogin(userLogin);
@@ -181,7 +184,6 @@ public class Parser {
             parseNewUser(campus, campus.getUserLogin());
         }
 
-        LOG.info("user before get graph " + user);
         projectService.updateGraph(getResponse(campus, Request.getGraphInfo(user)));
 
         LOG.info("Parse graph done");
@@ -239,13 +241,12 @@ public class Parser {
     private JsonNode getResponse(Campus campus, String requestBody) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", campus.getCookie());
-        headers.set("schoolId", campus.getSchoolId());
-        headers.set("authority", AUTHORITY);
+        headers.set("schoolId", campus.getId());
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(GRAPHQL_URL, HttpMethod.GET, request, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(GRAPHQL_URL, HttpMethod.POST, request, String.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             return MAPPER.readTree(response.getBody()).get(DATA);
         } else {
@@ -255,8 +256,8 @@ public class Parser {
     }
 
     public void updateCookies(Campus campus) {
-//        String cookies = cookiesGrabber.getCookies(campus.getUserLogin(), campus.getUserPassword());
-        String cookies = "_ym_uid=1692288945576653183; _ym_d=1692288945; _gcl_au=1.1.319061563.1692288945; iap.uid=05bd1eb6e2564f95825bd96ae1d280f6; tmr_lvid=65f6fdb3f0916961dcb766239dfefbc5; tmr_lvidTS=1692288945360; _tt_enable_cookie=1; _ttp=97MW6hoYBzWPkUYNYY8kpPk1WZU; adrcid=Aq8jFotcAhm8gugm-su67Cg; _ga=GA1.1.897720265.1692288945; _ga_TR6E0P9RCL=GS1.1.1692301080.4.0.1692301080.0.0.0; SI=6480b6ba-4f44-4af9-b77c-ab748625ee91; localeCode=en_EN; _ga_94PX1KP3QL=GS1.1.1692540698.3.1.1692542887.0.0.0; tokenId=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5V29landCTmxROWtQVEpFZnFpVzRrc181Mk1KTWkwUHl2RHNKNlgzdlFZIn0.eyJleHAiOjE2OTI1NzY2OTgsImlhdCI6MTY5MjU0Mjg4NywiYXV0aF90aW1lIjoxNjkyNTQwNjk4LCJqdGkiOiI0ZjdmZTlhNy1lN2M2LTQ5NWQtYmI1Yy1mYzE0ZWZmMGE1NzEiLCJpc3MiOiJodHRwczovL2F1dGguc2JlcmNsYXNzLnJ1L2F1dGgvcmVhbG1zL0VkdVBvd2VyS2V5Y2xvYWsiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMDhjMjY0MTgtOGY5NS00N2Y4LWIwZTEtNmM5ZWVjZWI3NDY5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2Nob29sMjEiLCJub25jZSI6IjJmMDQyNzk2LWExYTctNDBjOC04NzhjLTlkZGViOGQ5YWQ0ZiIsInNlc3Npb25fc3RhdGUiOiIwYjA3ZTdhYS1lYWI2LTQyNjAtOTRmYy1lYzE0ZGJjMDdiODQiLCJhY3IiOiIwIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vZWR1LjIxLXNjaG9vbC5ydSIsImh0dHBzOi8vZWR1LWFkbWluLjIxLXNjaG9vbC5ydSJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1lZHVwb3dlcmtleWNsb2FrIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwidXNlcl9pZCI6ImI1NjkzZjhlLTQxOGUtNDg3ZC05MmIxLTI2OGFlMmM1ODQ1ZiIsIm5hbWUiOiJGZXJuYW5kYSBCZWF0cmlzIiwiYXV0aF90eXBlX2NvZGUiOiJkZWZhdWx0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoiZmJlYXRyaXNAc3R1ZGVudC4yMS1zY2hvb2wucnUiLCJnaXZlbl9uYW1lIjoiRmVybmFuZGEiLCJmYW1pbHlfbmFtZSI6IkJlYXRyaXMiLCJlbWFpbCI6ImZiZWF0cmlzQHN0dWRlbnQuMjEtc2Nob29sLnJ1In0.Qb_cGXwRif0cYQVrE2T_-hyT1-qlpiT0uqPRQtslsvk45gu3tHUV16ehuNevUHOBqGBKr_M_v-6tPkavNfM5C_zmqyyADF1PrdsS9weMwAApSQ38AQt7D_w4VsTgnAMg9j7bIGmA3BlWmCMkViz68YmaNXOl4bKPW9sux8Ee804DDiR2zQEA1PQsNeUh6IJ_OrcP5s4oA1lIX-_V1BX72WW9iCloCsbTKnOcU342Pns1nL0T_lBz9NH7hZv2OUzLIWMJq3So32C5fULr9MjARiMKllNVnNYmy2ITn_tmJgRH2vaUloNwb5FertnrpHQXqSVpLDKV9shhVY-p30ifew";
+//        String cookies = cookiesGrabber.getCookies(campus.getUserFullLogin(), campus.getUserPassword());
+        String cookies = "_ga_94PX1KP3QL=GS1.1.1692571942.70.1.1692572668.0.0.0; _ga=GA1.1.758073578.1682197028; SI=52ea1b06-998d-484f-ba5d-1e727579c799; tokenId=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5V29landCTmxROWtQVEpFZnFpVzRrc181Mk1KTWkwUHl2RHNKNlgzdlFZIn0.eyJleHAiOjE2OTI2MDc5NDEsImlhdCI6MTY5MjU3MjY2NywiYXV0aF90aW1lIjoxNjkyNTcxOTQxLCJqdGkiOiI4ODJmZmY3NS0yNWRlLTQ0YjktYjM5NC01OTcwNTZmNGJmMDkiLCJpc3MiOiJodHRwczovL2F1dGguc2JlcmNsYXNzLnJ1L2F1dGgvcmVhbG1zL0VkdVBvd2VyS2V5Y2xvYWsiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMDhjMjY0MTgtOGY5NS00N2Y4LWIwZTEtNmM5ZWVjZWI3NDY5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2Nob29sMjEiLCJub25jZSI6IjgxZTA2ZjdkLTZmMWItNGQ5ZC1iNzU3LWZjZDk2YjQ2NDMxMiIsInNlc3Npb25fc3RhdGUiOiI2YzY0MjIxZi1jMjIxLTQwOGQtOWRlZC0yMTMxNmNhZTAyNzAiLCJhY3IiOiIwIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vZWR1LjIxLXNjaG9vbC5ydSIsImh0dHBzOi8vZWR1LWFkbWluLjIxLXNjaG9vbC5ydSJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1lZHVwb3dlcmtleWNsb2FrIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwidXNlcl9pZCI6ImI1NjkzZjhlLTQxOGUtNDg3ZC05MmIxLTI2OGFlMmM1ODQ1ZiIsIm5hbWUiOiJGZXJuYW5kYSBCZWF0cmlzIiwiYXV0aF90eXBlX2NvZGUiOiJkZWZhdWx0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoiZmJlYXRyaXNAc3R1ZGVudC4yMS1zY2hvb2wucnUiLCJnaXZlbl9uYW1lIjoiRmVybmFuZGEiLCJmYW1pbHlfbmFtZSI6IkJlYXRyaXMiLCJlbWFpbCI6ImZiZWF0cmlzQHN0dWRlbnQuMjEtc2Nob29sLnJ1In0.KmwND1l_9YrM1SlN7P4p3AZ3Vfw7g1V5QCrbe8NSRP2BAhOWsE8pDCSoLj58LxWAAjoWwMrmvbf_mHcHqi83DMDE_A5-2Qaa8Vlof4Jmj7Vl4VYhGmeP4oCO6QrkIk1wT5sgr4cfv3Gmp2be_zckLA_SrZ2m_bFUBgcvGv1nGA0130uj0VIjgfGhGwGSBhKqDHxolPBtsFvdQ7NtQHMUKvRQGXhG7RsMygp7i4ijF50kqnyrhYOpIUw0YLggRTHmnCMhqCEmnkoL1qyY87wusToOyZ5XnCXqkHZmHDBicSfoRSmqeigiRuUs6LEBSd6rLIZo2CuXjCGzH-mD7iiDiw; localeCode=en_EN";
         campusService.setCookies(campus, cookies);
     }
 

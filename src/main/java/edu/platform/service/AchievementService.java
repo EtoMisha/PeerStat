@@ -1,8 +1,6 @@
 package edu.platform.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.models.Achievement;
 import edu.platform.repository.AchievementRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,19 +21,16 @@ public class AchievementService {
 
     private final AchievementRepository achievementRepository;
 
-    private final ObjectMapper MAPPER = new ObjectMapper();
-    private final TypeReference<Map<String, String>> TYPE_REFERENCE_STRING_MAP = new TypeReference<Map<String, String>> () {};
-
     public Achievement getOrCreate(JsonNode achievementJson) {
         if (achievementJson.isEmpty()) {
             LOG.error("Empty achievement");
             return null;
         }
 
-        Map<String, String> achievementMap = MAPPER.convertValue(achievementJson.at(BADGE), TYPE_REFERENCE_STRING_MAP);
-        Long id = Long.parseLong(achievementMap.get(ID));
-        String name = achievementMap.get(NAME);
-        String avatarUrl = achievementMap.get(AVATAR_URL);
+        JsonNode achievement = achievementJson.get(BADGE);
+        Long id = achievement.get(ID).asLong();
+        String name = achievement.get(NAME).asText();
+        String avatarUrl = achievement.get(AVATAR_URL).asText();
         Optional<Achievement> achievementOpt = achievementRepository.findById(id);
 
         return achievementOpt.orElseGet(() -> create(id, name, avatarUrl));
@@ -43,6 +38,7 @@ public class AchievementService {
 
     public Achievement create(Long id, String name, String avatarUrl) {
         Achievement achievement = new Achievement();
+        achievement.setId(id);
         achievement.setName(name);
         achievement.setAvatarUrl(avatarUrl);
         achievementRepository.save(achievement);

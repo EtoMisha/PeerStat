@@ -11,7 +11,7 @@ import java.util.List;
 public class Campus {
 
     @Id
-    private String schoolId;
+    private String id;
     private String name;
     private String campusName;
     private String wavePrefix;
@@ -40,8 +40,8 @@ public class Campus {
     @JoinColumn(name = "campus_id")
     private List<Notification> notifications;
 
-    public Campus(String schoolId) {
-        this.schoolId = schoolId;
+    public Campus(String id) {
+        this.id = id;
     }
 
     public Campus() {}

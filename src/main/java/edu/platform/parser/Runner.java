@@ -53,16 +53,16 @@ public class Runner {
 
         try {
             campusList = campusService.initCampusesFromProps(CAMPUS_PROPERTIES);
-            LOG.info("Campus list " + campusList);
             campusList.forEach(parser::updateCookies);
+//            campusList = campusService.getAll();
 
             if (updateGraph) {
                 Campus campus = campusList.get(0);
 
                 parser.parseGraphInfo(campus);
-                projectService.getAll().stream()
-                        .filter(project -> project.getProjectType() == null)
-                        .forEach(project -> parser.updateProjects(campus, project));
+//                projectService.getAll().stream()
+//                        .filter(project -> project.getProjectType() == null)
+//                        .forEach(project -> parser.updateProjects(campus, project));
             }
 
             if (TEST_MODE.equals(mode)) {

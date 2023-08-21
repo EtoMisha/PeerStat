@@ -31,7 +31,7 @@ public class UserAchievementService {
         Achievement achievement = achievementService.getOrCreate(achievementJson);
         Optional<UserAchievement> userAchievementOpt = userAchievementRepository.findByUserAndAchievement(user, achievement);
 
-        int points = achievementJson.get(GraphQLConstants.TOTAL_POWER).asInt();
+        int points = achievementJson.get(GraphQLConstants.POINTS).asInt();
         UserAchievement userAchievement = userAchievementOpt.orElseGet(() -> create(user, achievement));
         userAchievement.setPoints(points);
         userAchievementRepository.save(userAchievement);

@@ -48,6 +48,7 @@ public interface GraphQLConstants {
 
     // Feedback
     String PATH_FEEDBACK = "/getFeedbackStatisticsAverageScore/feedbackAverageScore";
+    String FEEDBACK_CATEGORY = "categoryCode";
     String FEEDBACK_VALUE = "value";
 
     // Xp gains

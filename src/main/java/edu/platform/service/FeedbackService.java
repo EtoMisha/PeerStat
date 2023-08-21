@@ -36,7 +36,7 @@ public class FeedbackService {
         Map<String, Double> feedbackValues = new HashMap<>();
         Optional<Feedback> userFeedbackOpt = feedbackRepository.findByUser(user);
         for (JsonNode feedbackJson : feedbackJsonArr) {
-            String category = feedbackJson.get(GraphQLConstants.FEEDBACK_VALUE).asText();
+            String category = feedbackJson.get(GraphQLConstants.FEEDBACK_CATEGORY).asText();
             double value = feedbackJson.get(GraphQLConstants.FEEDBACK_VALUE).asDouble();
             feedbackValues.put(category, value);
         }

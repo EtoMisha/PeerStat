@@ -60,7 +60,7 @@ public class Request {
                   },
                   "query": "query publicProfileGetPersonalInfo($userId: UUID!, $studentId: UUID!, $login: String!, $schoolId: UUID!) {\\n  student {\\n    getAvatarByUserId(userId: $userId)\\n    getStageGroupS21PublicProfile(studentId: $studentId) {\\n      waveId\\n      waveName\\n      eduForm\\n      __typename\\n    }\\n    getExperiencePublicProfile(userId: $userId) {\\n      value\\n      level {\\n        levelCode\\n        range {\\n          leftBorder\\n          rightBorder\\n          __typename\\n        }\\n        __typename\\n      }\\n      cookiesCount\\n      coinsCount\\n      codeReviewPoints\\n      __typename\\n    }\\n    getEmailbyUserId(userId: $userId)\\n    getWorkstationByLogin(login: $login) {\\n      workstationId\\n      hostName\\n      row\\n      number\\n      __typename\\n    }\\n    getClassRoomByLogin(login: $login) {\\n      id\\n      number\\n      floor\\n      __typename\\n    }\\n    getFeedbackStatisticsAverageScore(studentId: $studentId) {\\n      countFeedback\\n      feedbackAverageScore {\\n        categoryCode\\n        categoryName\\n        value\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n  user {\\n    getSchool(schoolId: $schoolId) {\\n      id\\n      fullName\\n      shortName\\n      address\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId(), user.getStudentId(), user.getCampus().getSchoolId(), user.getLogin());
+                """, user.getUserId(), user.getStudentId(), user.getCampus().getId(), user.getLogin());
     }
 
     public static String getCoalitionInfo(User user) {
@@ -86,7 +86,7 @@ public class Request {
                   },
                   "query": "query publicProfileLoadAverageLogtime($login: String!, $schoolID: UUID!, $date: Date!) {\\n  school21 {\\n    loadAverageLogtime(login: $login, schoolID: $schoolID, date: $date) {\\n      week\\n      month\\n      weekPerMonth\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getLogin(), user.getCampus().getSchoolId(), LocalDate.now());
+                """, user.getLogin(), user.getCampus().getId(), LocalDate.now());
     }
 
     public static String getStageInfo(User user) {
@@ -99,7 +99,7 @@ public class Request {
                   },
                   "query": "query publicProfileLoadStageGroups($userId: UUID!, $schoolId: UUID!) {\\n  school21 {\\n    loadStudentStageGroupsS21PublicProfile(userId: $userId, schoolId: $schoolId) {\\n      stageGroupStudentId\\n      studentId\\n      stageGroupS21 {\\n        waveId\\n        waveName\\n        eduForm\\n        active\\n        __typename\\n      }\\n      safeSchool {\\n        fullName\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId(), user.getCampus().getSchoolId());
+                """, user.getUserId(), user.getCampus().getId());
     }
 
     public static String getXpGains(User user) {

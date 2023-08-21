@@ -1,9 +1,7 @@
 package edu.platform.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.platform.models.Campus;
 import edu.platform.parser.Parser;
-import edu.platform.parser.Request;
 import edu.platform.repository.CampusRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -50,11 +48,9 @@ public class CampusService {
     }
 
     public Campus createFromProperties(Properties props, String campusTag) {
-        LOG.info("Create campus from properties " + campusTag);
-
         Campus campus = new Campus();
         campus.setName(campusTag);
-        campus.setSchoolId(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_SCHOOL_ID));
+        campus.setId(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_SCHOOL_ID));
         campus.setCampusName(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_NAME));
         campus.setWavePrefix(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_WAVE_PREFIX));
         campus.setUserFullLogin(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_LOGIN));
@@ -62,7 +58,7 @@ public class CampusService {
         campus.setUserPassword(props.getProperty(PROPERTY_PREFIX + campusTag + PROPERTY_PASSWORD));
         campusRepository.save(campus);
 
-        LOG.info("Create campus ok " + campus);
+        LOG.info("Campus created: " + campus.getName());
         return campus;
     }
 

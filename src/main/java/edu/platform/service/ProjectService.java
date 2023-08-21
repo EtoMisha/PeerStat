@@ -49,11 +49,10 @@ public class ProjectService {
 
         if (entityType.equals(EntityType.GOAL)) {
             project.setProjectType(ProjectType.valueOf(details.get(GOAL_TYPE).asText()));
-            project.setIsMandatory(Boolean.valueOf(details.get(IS_MANDATORY).asText()));
+            project.setIsMandatory(details.get(IS_MANDATORY).asBoolean());
         } else if (entityType.equals(EntityType.COURSE)) {
             project.setProjectType(ProjectType.valueOf(details.get(COURSE_TYPE).asText()));
             project.setCourseId(details.get(COURSE_ID).asInt());
-            project.setIsMandatory(Boolean.valueOf(details.get(IS_MANDATORY).asText()));
         }
 
         projectRepository.save(project);

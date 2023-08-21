@@ -1,8 +1,6 @@
 package edu.platform.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.constants.ProjectState;
 import edu.platform.constants.UserStatus;
 import edu.platform.models.*;
@@ -36,10 +34,6 @@ public class UserService {
     private final FeedbackService feedbackService;
     private final XpGainService xpGainService;
 
-    private final ObjectMapper MAPPER = new ObjectMapper();
-    private final TypeReference<Map<String, String>> TYPE_REFERENCE_STRING_MAP = new TypeReference<Map<String, String>> () {};
-    private final TypeReference<Map<String, Integer>> TYPE_REFERENCE_INT_MAP = new TypeReference<Map<String, Integer>> () {};
-
     public Optional<User> findByLogin(String login) {
         return userRepository.findByLogin(login);
     }
@@ -57,15 +51,14 @@ public class UserService {
             return;
         }
 
-        Map<String, String> credentialsMap = MAPPER.convertValue(credentialsJson.at(PATH_STUDENT), TYPE_REFERENCE_STRING_MAP);
-
-        user.setUserId(credentialsMap.get(USER_ID));
-        user.setStudentId(credentialsMap.get(STUDENT_ID));
+        JsonNode credentials = credentialsJson.at(PATH_STUDENT);
+        user.setUserId(credentials.get(USER_ID).asText());
+        user.setStudentId(credentials.get(STUDENT_ID).asText());
 
         UserStatus status;
-        if (Boolean.parseBoolean(credentialsMap.get(IS_GRADUATE))) {
+        if (credentials.get(IS_GRADUATE).asBoolean()) {
             status = UserStatus.ALUMNI;
-        } else if (Boolean.parseBoolean(credentialsMap.get(IS_ACTIVE))) {
+        } else if (credentials.get(IS_ACTIVE).asBoolean()) {
             status = UserStatus.STUDENT;
         } else {
             status = UserStatus.DEACTIVATED;
@@ -102,6 +95,8 @@ public class UserService {
         user.setLevel(level.get(LEVEL_CODE).asInt());
         user.setLeftBorder(level.get(RANGE).get(LEFT_BORDER).asInt());
         user.setRightBorder(level.get(RANGE).get(RIGHT_BORDER).asInt());
+
+        userRepository.save(user);
 
         JsonNode feedbackArrJson = student.at(PATH_FEEDBACK);
         feedbackService.createOrUpdate(user, feedbackArrJson);
