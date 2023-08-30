@@ -60,7 +60,7 @@ public class Request {
                   },
                   "query": "query publicProfileGetPersonalInfo($userId: UUID!, $studentId: UUID!, $login: String!, $schoolId: UUID!) {\\n  student {\\n    getAvatarByUserId(userId: $userId)\\n    getStageGroupS21PublicProfile(studentId: $studentId) {\\n      waveId\\n      waveName\\n      eduForm\\n      __typename\\n    }\\n    getExperiencePublicProfile(userId: $userId) {\\n      value\\n      level {\\n        levelCode\\n        range {\\n          leftBorder\\n          rightBorder\\n          __typename\\n        }\\n        __typename\\n      }\\n      cookiesCount\\n      coinsCount\\n      codeReviewPoints\\n      __typename\\n    }\\n    getEmailbyUserId(userId: $userId)\\n    getWorkstationByLogin(login: $login) {\\n      workstationId\\n      hostName\\n      row\\n      number\\n      __typename\\n    }\\n    getClassRoomByLogin(login: $login) {\\n      id\\n      number\\n      floor\\n      __typename\\n    }\\n    getFeedbackStatisticsAverageScore(studentId: $studentId) {\\n      countFeedback\\n      feedbackAverageScore {\\n        categoryCode\\n        categoryName\\n        value\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n  user {\\n    getSchool(schoolId: $schoolId) {\\n      id\\n      fullName\\n      shortName\\n      address\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId(), user.getStudentId(), user.getCampus().getId(), user.getLogin());
+                """, user.getId(), user.getStudentId(), user.getCampus().getId(), user.getLogin());
     }
 
     public static String getCoalitionInfo(User user) {
@@ -72,7 +72,7 @@ public class Request {
                   },
                   "query": "query publicProfileGetCoalition($userId: UUID!) {\\n  student {\\n    getUserTournamentWidget(userId: $userId) {\\n      coalitionMember {\\n        coalition {\\n          avatarUrl\\n          color\\n          name\\n          memberCount\\n          __typename\\n        }\\n        currentTournamentPowerRank {\\n          rank\\n          power {\\n            id\\n            points\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      lastTournamentResult {\\n        userRank\\n        power\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId());
+                """, user.getId());
     }
 
     public static String getLogTime(User user) {
@@ -99,7 +99,7 @@ public class Request {
                   },
                   "query": "query publicProfileLoadStageGroups($userId: UUID!, $schoolId: UUID!) {\\n  school21 {\\n    loadStudentStageGroupsS21PublicProfile(userId: $userId, schoolId: $schoolId) {\\n      stageGroupStudentId\\n      studentId\\n      stageGroupS21 {\\n        waveId\\n        waveName\\n        eduForm\\n        active\\n        __typename\\n      }\\n      safeSchool {\\n        fullName\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId(), user.getCampus().getId());
+                """, user.getId(), user.getCampus().getId());
     }
 
     public static String getXpGains(User user) {
@@ -111,7 +111,7 @@ public class Request {
                   },
                   "query": "query publicProfileGetXpGraph($userId: UUID!) {\\n  student {\\n    getExperienceHistoryDate(userId: $userId) {\\n      history {\\n        awardDate\\n        expValue\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId());
+                """, user.getId());
     }
 
     public static String getUserProjects(User user) {
@@ -151,7 +151,7 @@ public class Request {
                 """, goalId);
     }
 
-    public static String getBuildingInfo() {
+    public static String getClusters() {
         return """
                 {
                   "operationName": "getCampusBuildings",
@@ -162,7 +162,19 @@ public class Request {
                 }""";
     }
 
-    public static String getClusterPlanInfo(int clusterId) {
+    public static String getWorkstations(User user) {
+        return String.format("""
+                {
+                  "operationName": "getCampusWorkstation",
+                  "variables": {
+                    "login": "%s@student.21-school.ru"
+                  },
+                  "query": "query getCampusWorkstation($login: String!) {\\n  student {\\n    getWorkstationByLogin(login: $login) {\\n      id\\n      classroomId\\n      hostName\\n      workstationRow\\n      workstationNumber\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
+                }
+                """, user.getLogin());
+    }
+
+    public static String getClusterPlanInfo(long clusterId) {
         return String.format("""
                 {
                   "operationName": "getCampusPlanOccupied",
@@ -183,7 +195,7 @@ public class Request {
                   },
                   "query": "query publicProfileGetAchievements($userId: UUID!) {\\n  student {\\n    getBadgesPublicProfile(userId: $userId) {\\n      points\\n      id\\n      badge {\\n        id\\n        name\\n        avatarUrl\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
-                """, user.getUserId());
+                """, user.getId());
     }
 
     public static String getUserSkills(User user) {
@@ -196,6 +208,23 @@ public class Request {
                   "query": "query publicProfileGetSoftSkills($studentId: UUID!) {\\n  school21 {\\n    getSoftSkillsByStudentId(studentId: $studentId) {\\n      id\\n      type\\n      code\\n      totalPower\\n      hueSaturationLightness\\n      __typename\\n    }\\n    getSoftSkillLimitByStudentId(studentId: $studentId) {\\n      powerLimit\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n"
                 }
                 """, user.getStudentId());
+    }
+
+    public static String getEvents() {
+        return """
+                {
+                  "operationName": "getUpcomingEvents",
+                  "variables": {
+                    "eventCodes": [
+                      "activity",
+                      "exam",
+                      "employer_meeting",
+                      "participant_event"
+                    ]
+                  },
+                  "query": "query getUpcomingEvents($eventCodes: [String!]!, $registrationAccessStatusFilter: RegistartionStatusEnum, $page: PagingInput) {\\n  student {\\n    getUpcomingEventsForRegistration(\\n      eventCodes: $eventCodes\\n      registrationAccessStatusFilter: $registrationAccessStatusFilter\\n      page: $page\\n    ) {\\n      ...UpcomingEvent\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\\nfragment UpcomingEvent on CalendarEvent {\\n  id\\n  start\\n  end\\n  bookings {\\n    id\\n    task {\\n      id\\n      goalName\\n      __typename\\n    }\\n    __typename\\n  }\\n  eventSlots {\\n    id\\n    eventId\\n    type\\n    start\\n    end\\n    __typename\\n  }\\n  maxStudentCount\\n  location\\n  ipRange\\n  eventType\\n  eventCode\\n  description\\n  externalId\\n  currentStudentsCount\\n  exam {\\n    examId\\n    eventId\\n    beginDate\\n    endDate\\n    location\\n    ip\\n    maxStudentCount\\n    isVisible\\n    name\\n    goalId\\n    isWaitListActive\\n    isInWaitList\\n    currentStudentsCount\\n    createDate\\n    updateDate\\n    schoolId\\n    stopRegisterDate\\n    isRegistered\\n    goalName\\n    eventType\\n    registrationAccessStatus\\n    __typename\\n  }\\n  studentCodeReview {\\n    studentGoalId\\n    __typename\\n  }\\n  activity {\\n    activityEventId\\n    eventId\\n    beginDate\\n    endDate\\n    location\\n    description\\n    maxStudentCount\\n    isVisible\\n    name\\n    isWaitListActive\\n    isInWaitList\\n    currentStudentsCount\\n    createDate\\n    updateDate\\n    schoolId\\n    stopRegisterDate\\n    isRegistered\\n    activityType\\n    eventType\\n    isMandatory\\n    status\\n    organizers {\\n      id\\n      login\\n      __typename\\n    }\\n    __typename\\n  }\\n  penalty {\\n    ...Penalty\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment Penalty on Penalty {\\n  comment\\n  id\\n  duration\\n  status\\n  startTime\\n  createTime\\n  penaltySlot {\\n    currentStudentsCount\\n    description\\n    duration\\n    startTime\\n    id\\n    endTime\\n    __typename\\n  }\\n  reasonId\\n  __typename\\n}\\n"
+                }
+                """;
     }
 
 }

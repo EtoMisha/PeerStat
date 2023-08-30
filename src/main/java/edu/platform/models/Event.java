@@ -22,6 +22,7 @@ public class Event {
     private String type;
     private String title;
     private String description;
+    private String location;
     private int maxParticipants;
     private int registered;
 

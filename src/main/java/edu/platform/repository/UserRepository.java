@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface UserRepository extends PagingAndSortingRepository<User, String> {
 
     List<User> findUsersByCampus(Campus campus);
+    Optional<User> findById(String id);
     Optional<User> findByLogin(String login);
     void save(User user);
 

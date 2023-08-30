@@ -34,6 +34,10 @@ public class UserService {
     private final FeedbackService feedbackService;
     private final XpGainService xpGainService;
 
+    public Optional<User> findById(String id) {
+        return userRepository.findById(id);
+    }
+
     public Optional<User> findByLogin(String login) {
         return userRepository.findByLogin(login);
     }
@@ -52,7 +56,7 @@ public class UserService {
         }
 
         JsonNode credentials = credentialsJson.at(PATH_STUDENT);
-        user.setUserId(credentials.get(USER_ID).asText());
+        user.setId(credentials.get(USER_ID).asText());
         user.setStudentId(credentials.get(STUDENT_ID).asText());
 
         UserStatus status;

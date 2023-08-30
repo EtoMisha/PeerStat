@@ -12,7 +12,7 @@ import java.util.List;
 public class User {
 
     @Id
-    private String userId;
+    private String id;
     private String studentId;
     private String login;
     private String email;
@@ -57,11 +57,11 @@ public class User {
     private Feedback feedbacks;
 
     @OneToMany
-    @JoinColumn(name = "user_id")
+//    @JoinColumn(name = "user_id")
     private List<UserAchievement> achievements;
 
     @OneToMany
-    @JoinColumn(name = "user_id")
+//    @JoinColumn(name = "user_id")
     private List<XpGain> xpGains;
 
     public User() {}

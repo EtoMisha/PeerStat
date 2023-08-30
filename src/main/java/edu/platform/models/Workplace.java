@@ -10,10 +10,9 @@ import lombok.Data;
 public class Workplace {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
     private String row;
-    private String number;
+    private int number;
 
     @OneToOne
     private User user;

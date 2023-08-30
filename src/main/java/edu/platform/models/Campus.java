@@ -33,11 +33,11 @@ public class Campus {
     private List<User> users;
 
     @OneToMany
-    @JoinColumn(name = "campus_id")
+//    @JoinColumn(name = "campus_id")
     private List<Event> events;
 
     @OneToMany
-    @JoinColumn(name = "campus_id")
+//    @JoinColumn(name = "campus_id")
     private List<Notification> notifications;
 
     public Campus(String id) {

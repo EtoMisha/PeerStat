@@ -2,7 +2,6 @@ package edu.platform.parser;
 
 import edu.platform.models.Campus;
 import edu.platform.service.CampusService;
-import edu.platform.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,19 +30,13 @@ public class Runner {
 
     private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
 
-
     @Value("${run.mode}")
     private String mode;
-    @Value("${run.runtime}")
-    private String runTimeSetting;
-    @Value("${run.plus-days}")
-    private String plusDays;
     @Value("${run.update-graph}")
     private boolean updateGraph;
 
     private final Parser parser;
     private final CampusService campusService;
-    private final ProjectService projectService;
 
     private List<Campus> campusList;
 
@@ -53,17 +46,7 @@ public class Runner {
 
         try {
             campusList = campusService.initCampusesFromProps(CAMPUS_PROPERTIES);
-            campusList.forEach(parser::updateCookies);
-//            campusList = campusService.getAll();
-
-            if (updateGraph) {
-                Campus campus = campusList.get(0);
-
-                parser.parseGraphInfo(campus);
-//                projectService.getAll().stream()
-//                        .filter(project -> project.getProjectType() == null)
-//                        .forEach(project -> parser.updateProjects(campus, project));
-            }
+            parser.parseCampusInfo(campusList);
 
             if (TEST_MODE.equals(mode)) {
                 campusList.forEach(parser::testInit);
@@ -73,47 +56,19 @@ public class Runner {
                 campusList.forEach(parser::updateUsers);
             }
 
-            scheduleDataUpdate();
-            scheduleCookieUpdate();
-            scheduleLocationsUpdate();
+            scheduleUpdate(this::dataUpdate, TimeUnit.DAYS.toMinutes(1));
+            scheduleUpdate(this::cookieUpdate, TimeUnit.HOURS.toMinutes(6));
+            scheduleUpdate(this::workplacesUpdate, TimeUnit.MINUTES.toMinutes(10));
 
         } catch (IOException e) {
             LOG.error("Runner error " + e.getMessage());
         }
     }
 
-    private void scheduleDataUpdate() {
+    private void scheduleUpdate(Runnable operation, long delay) {
+        LOG.info("Schedule " + operation + " delay " + delay);
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        LocalTime runTime = LocalTime.parse(runTimeSetting);
-        long delay = LocalDateTime.now().until(LocalDate.now()
-                .plusDays(Integer.parseInt(plusDays))
-                .atTime(runTime), ChronoUnit.MINUTES);
-
-        LOG.info("ScheduleDataUpdate time " + runTime + " delay " + delay);
-
-        final Runnable scheduleRunner = this::dataUpdate;
-        scheduler.scheduleAtFixedRate(scheduleRunner, delay,
-                TimeUnit.DAYS.toMinutes(1), TimeUnit.MINUTES);
-    }
-
-    private void scheduleCookieUpdate() {
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-        long period = TimeUnit.HOURS.toMinutes(6);
-        LOG.info("ScheduleCookieUpdate period " + period);
-
-        final Runnable scheduleRunner = this::cookieUpdate;
-        scheduler.scheduleAtFixedRate(scheduleRunner, period, period, TimeUnit.MINUTES);
-    }
-
-    private void scheduleLocationsUpdate() {
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-        long period = TimeUnit.MINUTES.toMinutes(10);
-        LOG.info("ScheduleLocationsUpdate period " + period);
-
-        final Runnable scheduleRunner = this::locationsUpdate;
-        scheduler.scheduleAtFixedRate(scheduleRunner, TimeUnit.MINUTES.toMinutes(1), period, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(operation, delay, delay, TimeUnit.MINUTES);
     }
 
     private void dataUpdate() {
@@ -122,11 +77,12 @@ public class Runner {
     }
 
     private void cookieUpdate() {
-        LOG.info("CookieUpdate " + LocalDateTime.now());
+        LOG.info("Cookie Update " + LocalDateTime.now());
         campusList.forEach(parser::updateCookies);
     }
 
-    private void locationsUpdate() {
-        campusList.forEach(parser::updateWorkplaces);
+    private void workplacesUpdate() {
+        LOG.info("Workplaces Update " + LocalDateTime.now());
+        campusList.forEach(parser::parseWorkplaces);
     }
 }

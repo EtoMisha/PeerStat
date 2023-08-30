@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.platform.models.*;
-import edu.platform.service.CampusService;
-import edu.platform.service.ProjectService;
-import edu.platform.service.UserService;
-import edu.platform.service.UserProjectService;
+import edu.platform.service.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +29,6 @@ import static edu.platform.constants.GraphQLConstants.*;
 public class Parser {
 
     private static final int SEARCH_LIMIT = 25;
-    private static final String AUTHORITY = "edu.21-school.ru";
     private static final String GRAPHQL_URL = "https://edu.21-school.ru/services/graphql";
 
     private static final String LAST_UPDATE_PROPERTIES_FILE = "last-update.properties";
@@ -41,11 +37,28 @@ public class Parser {
     private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private final CookiesGrabber cookiesGrabber;
     private final CampusService campusService;
     private final UserService userService;
     private final ProjectService projectService;
-    private final UserProjectService userProjectService;
-    private final CookiesGrabber cookiesGrabber;
+    private final ClusterService clusterService;
+    private final WorkplaceService workplaceService;
+    private final EventService eventService;
+
+    public void parseCampusInfo(List<Campus> campusList) {
+        try {
+            for (Campus campus : campusList) {
+                updateCookies(campus);
+                parseClusters(campus);
+                parseEvents(campus);
+                parseWorkplaces(campus);
+            }
+            parseGraph(campusList.get(0));
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void initUsers(Campus campus) {
         LOG.info("Init users begin by login " + campus.getUserFullLogin());
@@ -171,7 +184,7 @@ public class Parser {
 //
 //
 
-    public void parseGraphInfo(Campus campus) throws IOException {
+    public void parseGraph(Campus campus) throws IOException {
         LOG.info("Parse graph begin");
 
         String userLogin = campus.getUserLogin();
@@ -187,6 +200,34 @@ public class Parser {
         projectService.updateGraph(getResponse(campus, Request.getGraphInfo(user)));
 
         LOG.info("Parse graph done");
+    }
+
+    public void parseClusters(Campus campus) {
+        try {
+            clusterService.updateClusters(campus, getResponse(campus, Request.getClusters()));
+        } catch (JsonProcessingException e) {
+            LOG.error(e.getMessage());
+        }
+    }
+
+    public void parseWorkplaces(Campus campus) {
+        try {
+            List<Cluster> clustersList = clusterService.getCampusClusters(campus);
+            for (Cluster cluster : clustersList) {
+                JsonNode clusterPlan = getResponse(campus, Request.getClusterPlanInfo(cluster.getId()));
+                workplaceService.updateWorkplaces(cluster, clusterPlan);
+            }
+        } catch (JsonProcessingException e) {
+            LOG.error(e.getMessage());
+        }
+    }
+
+    public void parseEvents(Campus campus) {
+        try {
+            eventService.updateEvents(getResponse(campus, Request.getEvents()));
+        } catch (JsonProcessingException e) {
+            LOG.error(e.getMessage());
+        }
     }
 
     private List<String> getSearchResults(Campus campus, int offset) throws IOException {
@@ -256,13 +297,9 @@ public class Parser {
     }
 
     public void updateCookies(Campus campus) {
-//        String cookies = cookiesGrabber.getCookies(campus.getUserFullLogin(), campus.getUserPassword());
-        String cookies = "_ga_94PX1KP3QL=GS1.1.1692571942.70.1.1692572668.0.0.0; _ga=GA1.1.758073578.1682197028; SI=52ea1b06-998d-484f-ba5d-1e727579c799; tokenId=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5V29landCTmxROWtQVEpFZnFpVzRrc181Mk1KTWkwUHl2RHNKNlgzdlFZIn0.eyJleHAiOjE2OTI2MDc5NDEsImlhdCI6MTY5MjU3MjY2NywiYXV0aF90aW1lIjoxNjkyNTcxOTQxLCJqdGkiOiI4ODJmZmY3NS0yNWRlLTQ0YjktYjM5NC01OTcwNTZmNGJmMDkiLCJpc3MiOiJodHRwczovL2F1dGguc2JlcmNsYXNzLnJ1L2F1dGgvcmVhbG1zL0VkdVBvd2VyS2V5Y2xvYWsiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMDhjMjY0MTgtOGY5NS00N2Y4LWIwZTEtNmM5ZWVjZWI3NDY5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2Nob29sMjEiLCJub25jZSI6IjgxZTA2ZjdkLTZmMWItNGQ5ZC1iNzU3LWZjZDk2YjQ2NDMxMiIsInNlc3Npb25fc3RhdGUiOiI2YzY0MjIxZi1jMjIxLTQwOGQtOWRlZC0yMTMxNmNhZTAyNzAiLCJhY3IiOiIwIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vZWR1LjIxLXNjaG9vbC5ydSIsImh0dHBzOi8vZWR1LWFkbWluLjIxLXNjaG9vbC5ydSJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1lZHVwb3dlcmtleWNsb2FrIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwidXNlcl9pZCI6ImI1NjkzZjhlLTQxOGUtNDg3ZC05MmIxLTI2OGFlMmM1ODQ1ZiIsIm5hbWUiOiJGZXJuYW5kYSBCZWF0cmlzIiwiYXV0aF90eXBlX2NvZGUiOiJkZWZhdWx0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoiZmJlYXRyaXNAc3R1ZGVudC4yMS1zY2hvb2wucnUiLCJnaXZlbl9uYW1lIjoiRmVybmFuZGEiLCJmYW1pbHlfbmFtZSI6IkJlYXRyaXMiLCJlbWFpbCI6ImZiZWF0cmlzQHN0dWRlbnQuMjEtc2Nob29sLnJ1In0.KmwND1l_9YrM1SlN7P4p3AZ3Vfw7g1V5QCrbe8NSRP2BAhOWsE8pDCSoLj58LxWAAjoWwMrmvbf_mHcHqi83DMDE_A5-2Qaa8Vlof4Jmj7Vl4VYhGmeP4oCO6QrkIk1wT5sgr4cfv3Gmp2be_zckLA_SrZ2m_bFUBgcvGv1nGA0130uj0VIjgfGhGwGSBhKqDHxolPBtsFvdQ7NtQHMUKvRQGXhG7RsMygp7i4ijF50kqnyrhYOpIUw0YLggRTHmnCMhqCEmnkoL1qyY87wusToOyZ5XnCXqkHZmHDBicSfoRSmqeigiRuUs6LEBSd6rLIZo2CuXjCGzH-mD7iiDiw; localeCode=en_EN";
+        String cookies = cookiesGrabber.getCookies(campus.getUserFullLogin(), campus.getUserPassword());
+//        String cookies = "_ga_94PX1KP3QL=GS1.1.1692643557.73.1.1692643593.0.0.0; _ga=GA1.1.758073578.1682197028; SI=52ea1b06-998d-484f-ba5d-1e727579c799; tokenId=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5V29landCTmxROWtQVEpFZnFpVzRrc181Mk1KTWkwUHl2RHNKNlgzdlFZIn0.eyJleHAiOjE2OTI2Nzk1NTYsImlhdCI6MTY5MjY0MzU5MSwiYXV0aF90aW1lIjoxNjkyNjQzNTU2LCJqdGkiOiI3NmQ2MDRlNS1hZjk5LTQ5YjgtYTljOC0yODU0NWIzYmI5YjQiLCJpc3MiOiJodHRwczovL2F1dGguc2JlcmNsYXNzLnJ1L2F1dGgvcmVhbG1zL0VkdVBvd2VyS2V5Y2xvYWsiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMDhjMjY0MTgt…XNAc3R1ZGVudC4yMS1zY2hvb2wucnUiLCJnaXZlbl9uYW1lIjoiRmVybmFuZGEiLCJmYW1pbHlfbmFtZSI6IkJlYXRyaXMiLCJlbWFpbCI6ImZiZWF0cmlzQHN0dWRlbnQuMjEtc2Nob29sLnJ1In0.HqEpPz-k6pCDMQbaz__5oiQrFoWC3IRME6VI4vlyvRB4OgLGcnW1p3KaozCkeBIjIok1ff0Jnd3hGtA3W4TEzwdUITWK4_XtC9YItoMXDrc3yAqeNWDVSOCbKQvKlzUkPFJGvYTaJrq6EsqhsjCCyUnqXvjt9R4V3_tG_tEssaF5dL8gQc9UbY8PCmvU6FZFLwFhAOZuBzVMRSEX1e9rZ6fBQkUuyXrJpFEH_bYu4_p79siMxKrf7n5-8-qJDpYPakKgXWUD8eNbCwxA4WrsK3N995jXWFIT8s33bXnd9sVg-aaZmJQ_oNH1HhgZW0JwmKm9mYmgVh_ql9qEkEUdvQ; localeCode=en_EN";
         campusService.setCookies(campus, cookies);
-    }
-
-    public void updateWorkplaces(Campus campus) {
-        //TODO
     }
 
 }

@@ -90,4 +90,30 @@ public interface GraphQLConstants {
     String STUDY_MODULE = "studyModule";
     String IDEA = "idea";
     String GOAL_POINTS = "goalPoint";
+
+    // Clusters
+    String PATH_BUILDINGS = "/student/getBuildings";
+    String CLASSROOMS = "classrooms";
+    String CLUSTER_ID = "id";
+    String CLUSTER_NAME = "number";
+    String CAPACITY = "capacity";
+
+    // Workplace
+    String PATH_CLUSTER_PLAN = "/student/getClusterPlanStudentsByClusterId/occupiedPlaces";
+    String ROW = "row";
+    String NUMBER = "number";
+    String PATH_WORKPLACE_USER_ID = "/user/id";
+
+    // Events
+    String PATH_EVENTS = "/student/getUpcomingEventsForRegistration";
+    String EVENT_ID = "id";
+    String START = "start";
+    String END = "end";
+    String EVENT_TYPE = "eventType";
+    String MAX_STUDENTS = "maxStudentCount";
+    String LOCATION = "location";
+    String DESCRIPTION = "description";
+    String CURRENT_STUDENTS = "currentStudentsCount";
+    String PATH_DESCRIPTION = "/activity/description";
+    String PATH_AUTHOR_ID = "/activity/organizers/id";
 }
