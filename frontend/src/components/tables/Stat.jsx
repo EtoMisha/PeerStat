@@ -2,21 +2,25 @@ import React, { useEffect, useState } from "react";
 import Api from "../../Api/Api";
 import ReactTable from "./ReactTable";
 import { DropdownFilter, TextSearchFilter } from "../../utils/filters";
+import { useFetching } from "../hooks/useFetching";
+import Loader from "../loader/Loader";
 
 const Stat = () => {
   const [campusList, setcampusList] = useState({});
   const [userList, setUserList] = useState([]);
   const [campusId, setCampusId] = useState(0);
 
-  const fetchCampusList = async () => {
+  const [fetchCampusList, isCampusListLoading] = useFetching(async () => {
     const response = await Api.getCampusList();
     setcampusList(response.data);
-  };
+  });
 
-  const fetchUsertList = async (campusId) => {
-    const response = await Api.getStat(campusId);
-    setUserList(response.data);
-  };
+  const [fetchUsertList, isUsertListLoading] = useFetching(
+    async (campusId) => {
+      const response = await Api.getStat(campusId);
+      setUserList(response.data);
+    }
+  );
 
   useEffect(() => {
     fetchCampusList();
@@ -32,7 +36,7 @@ const Stat = () => {
       accessor: "login",
       Filter: TextSearchFilter,
       style: {
-        width: '10%',
+        width: "10%",
       },
     },
     {
@@ -40,7 +44,7 @@ const Stat = () => {
       accessor: "coalition",
       Filter: DropdownFilter,
       style: {
-        width: '8%',
+        width: "8%",
       },
     },
     {
@@ -48,7 +52,7 @@ const Stat = () => {
       accessor: "wave",
       Filter: DropdownFilter,
       style: {
-        width: '10%',
+        width: "10%",
       },
     },
     {
@@ -56,7 +60,7 @@ const Stat = () => {
       accessor: "platformClass",
       Filter: DropdownFilter,
       style: {
-        width: '10%',
+        width: "10%",
       },
     },
     {
@@ -64,7 +68,7 @@ const Stat = () => {
       accessor: "bootcamp",
       Filter: DropdownFilter,
       style: {
-        width: '10%',
+        width: "10%",
       },
     },
     {
@@ -72,7 +76,7 @@ const Stat = () => {
       accessor: "level",
       disableFilters: true,
       style: {
-        width: '10%',
+        width: "10%",
       },
     },
     {
@@ -80,7 +84,7 @@ const Stat = () => {
       accessor: "xp",
       disableFilters: true,
       style: {
-        width: '5%',
+        width: "5%",
       },
     },
     {
@@ -88,7 +92,7 @@ const Stat = () => {
       accessor: "peerPoints",
       disableFilters: true,
       style: {
-        width: '7%',
+        width: "7%",
       },
     },
     {
@@ -96,7 +100,7 @@ const Stat = () => {
       accessor: "codeReviewPoints",
       disableFilters: true,
       style: {
-        width: '7%',
+        width: "7%",
       },
     },
     {
@@ -104,7 +108,7 @@ const Stat = () => {
       accessor: "coins",
       disableFilters: true,
       style: {
-        width: '5%',
+        width: "5%",
       },
     },
     {
@@ -112,7 +116,7 @@ const Stat = () => {
       accessor: "diff3",
       disableFilters: true,
       style: {
-        width: '5%',
+        width: "5%",
       },
     },
     {
@@ -120,13 +124,17 @@ const Stat = () => {
       accessor: "currentProject",
       Filter: TextSearchFilter,
       style: {
-        width: '13%',
+        width: "13%",
       },
     },
   ];
 
   return (
     <div>
+      <Loader
+        loading={isCampusListLoading === true || isUsertListLoading === true}
+      />
+
       {Object.keys(campusList).length > 0 && (
         <select
           defaultValue={"default"}

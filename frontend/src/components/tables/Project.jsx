@@ -2,21 +2,25 @@ import React, { useEffect, useState, useMemo } from "react";
 import Api from "../../Api/Api";
 import ReactTable from "./ReactTable";
 import { DropdownFilter, TextSearchFilter } from "../../utils/filters";
+import { useFetching } from "../hooks/useFetching";
+import Loader from "../loader/Loader";
 
 const Project = () => {
   const [projectsList, setProjectsList] = useState([]);
   const [userList, setUserList] = useState([]);
   const [projectId, setProjectId] = useState(0);
 
-  const fetchProjectList = async () => {
+  const [fetchProjectList, isProjectListLoading] = useFetching(async () => {
     const response = await Api.getProjectList();
     setProjectsList(response.data);
-  };
+  });
 
-  const fetchUsertList = async (projectId) => {
-    const response = await Api.getProjectUsers(projectId);
-    setUserList(response.data);
-  };
+  const [fetchUsertList, isUsertListLoading] = useFetching(
+    async (projectId) => {
+      const response = await Api.getProjectUsers(projectId);
+      setUserList(response.data);
+    }
+  );
 
   useEffect(() => {
     fetchProjectList();
@@ -88,6 +92,10 @@ const Project = () => {
 
   return (
     <div>
+      <Loader
+        loading={isProjectListLoading === true || isUsertListLoading === true}
+      />
+
       {projectsList.length !== 0 && (
         <select
           defaultValue={"default"}
@@ -120,10 +128,7 @@ const Project = () => {
             <p>{currentProject.projectDescription}</p>
           </div>
 
-          <ReactTable
-            columns={columns}
-            data={userList}
-            />
+          <ReactTable columns={columns} data={userList} />
         </div>
       )}
     </div>
